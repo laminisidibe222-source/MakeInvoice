@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CreditCard, Loader2, Shield, Check, X } from 'lucide-react';
-import { apiFetch } from '../Supabase';
+import { apiFetch } from '../supabase';
 import {
   WaveLogo,
   OrangeMoneyLogo,

@@ -1,7 +1,7 @@
 import { FileCheck2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from './Supabase';
+import { supabase } from './supabase';
 import Auth from './components/Auth';
 import InvoiceForm from './components/InvoiceForm';
 import InvoicePreview from './components/InvoicePreview';
