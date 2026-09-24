@@ -1,0 +1,46 @@
+# ─── Dependencies ─────────────────────
+node_modules/
+node_modules
+**/node_modules/
+
+# ─── Environment files (SECRETS!) ─────
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.production
+
+# ─── Build outputs ────────────────────
+dist/
+dist-ssr/
+build/
+**/dist/
+**/build/
+
+# ─── Logs ─────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─── Editor / OS ──────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Local env overrides ──────────────
+*.local
+.cache/
+.vercel/
+.railway/
