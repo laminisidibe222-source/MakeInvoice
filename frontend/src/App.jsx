@@ -10,6 +10,8 @@ import PaymentModal from './components/PaymentModal';
 import { Zap, LogOut, Save, Sparkles, CheckCircle2, XCircle, Printer } from 'lucide-react';
 import Logo from './components/Logo';
 import LandingPage from './components/LandingPage';
+import Sidebar from './components/Sidebar';
+import { BarChart3, TrendingUp } from 'lucide-react';
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },
@@ -125,41 +127,39 @@ if (!session) {
   return <Auth onAuth={setSession} />;
 }
 
-  return (
-    <div className="app">
-      <header className="header">
-        <div className="header-left">
-          <div className="logo">
-            <span className="logo-icon">🧾</span>
-            <span className="logo-text">MakeInvoice</span>
+ return (
+  <div className="mi-app-shell">
+    <Sidebar onLogout={handleLogout} />
+
+    <div className="mi-app-main">
+      {/* Top bar */}
+      <header className="mi-topbar">
+        <div className="mi-topbar-left">
+          <div className="mi-status-pill">
+            <span className="mi-status-dot" />
+            <span>Mode Sénégal · TVA 18%</span>
           </div>
-          {profile && (
-            <span className={`plan-badge plan-${profile.plan}`}>
-              {profile.plan}
-            </span>
-          )}
         </div>
-        <div className="header-right">
+
+        <div className="mi-topbar-right">
           {profile && (
-            <div className="quota">
-              <span className="quota-text">
-                {profile.invoices_generated} / {profile.invoices_limit} factures
+            <div className="mi-quota-pill">
+              <span className="mi-quota-value">
+                {profile.invoices_generated}
+                <span className="mi-quota-sep">/</span>
+                {profile.invoices_limit}
               </span>
-              <div className="quota-bar">
-                <div
-                  className="quota-fill"
-                  style={{ width: `${Math.min((profile.invoices_generated / profile.invoices_limit) * 100, 100)}%` }}
-                />
-              </div>
+              <span className="mi-quota-label">factures</span>
             </div>
           )}
-          <button className="btn btn-logout" onClick={handleLogout}>
-            <LogOut size={15} /> Déconnexion
+          <button className="mi-icon-btn" type="button" aria-label="Mode sombre">
+            🌙
           </button>
         </div>
       </header>
 
-      <Routes>
+      <div className="mi-content">
+        <Routes>
           <Route path="/" element={
             <Workspace
               invoice={invoice}
@@ -167,37 +167,48 @@ if (!session) {
               profile={profile}
               loadProfile={loadProfile}
               showToast={showToast}
-              onUpgrade={setSelectedPlan} 
+              onUpgrade={setSelectedPlan}
             />
-         } />
-        <Route path="/payment/success" element={
-          <PaymentSuccess onDone={() => { loadProfile(); navigate('/'); }} />
-        } />
-        <Route path="/payment/cancel" element={
-          <PaymentCancel onDone={() => navigate('/')} />
-        } />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-
-      {selectedPlan && (
-        <PaymentModal
-          plan={selectedPlan}
-          onClose={() => setSelectedPlan(null)}
-          onSuccess={() => { setSelectedPlan(null); loadProfile(); }}
-          showToast={showToast}
-        />
-      )}
-
-      {toast && (
-        <div className={`toast toast-${toast.type}`}>{toast.message}</div>
-      )}
+          } />
+          <Route path="/payment/success" element={
+            <PaymentSuccess onDone={() => { loadProfile(); navigate('/'); }} />
+          } />
+          <Route path="/payment/cancel" element={
+            <PaymentCancel onDone={() => navigate('/')} />
+          } />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </div>
     </div>
-  );
-}
 
+    {selectedPlan && (
+      <PaymentModal
+        plan={selectedPlan}
+        onClose={() => setSelectedPlan(null)}
+        onSuccess={() => { setSelectedPlan(null); loadProfile(); }}
+        showToast={showToast}
+      />
+    )}
+
+    {toast && (
+      <div className={`toast toast-${toast.type}`}>{toast.message}</div>
+    )}
+  </div>
+);
+}
 function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpgrade }) {
   const canGenerate = profile && profile.invoices_generated < profile.invoices_limit;
   const [saving, setSaving] = useState(false);
+
+  // Live total of the current invoice
+  const subtotal = invoice.items.reduce((s, i) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
+  const taxAmount = subtotal * ((invoice.taxRate || 0) / 100);
+  const discountAmount = subtotal * ((invoice.discount || 0) / 100);
+  const total = subtotal + taxAmount - discountAmount;
+
+  const quotaPercent = profile
+    ? Math.min((profile.invoices_generated / profile.invoices_limit) * 100, 100)
+    : 0;
 
   const handleSave = async () => {
     if (!canGenerate) {
@@ -206,11 +217,6 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     }
     setSaving(true);
     try {
-      const subtotal = invoice.items.reduce((s, i) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
-      const taxAmount = subtotal * ((invoice.taxRate || 0) / 100);
-      const discountAmount = subtotal * ((invoice.discount || 0) / 100);
-      const total = subtotal + taxAmount - discountAmount;
-
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
         method: 'POST',
@@ -251,14 +257,66 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     }
   };
 
-  return (
-    <>
-      <main className="workspace">
-        <InvoiceForm invoice={invoice} setInvoice={setInvoice} />
-        <InvoicePreview invoice={invoice} />
-      </main>
+  const formatFCFA = (n) =>
+    isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
-      <div className="action-bar">
+  return (
+    <main className="mi-workspace">
+      {/* Title row */}
+      <div className="mi-page-head">
+        <h1 className="mi-page-title">Nouvelle facture</h1>
+        <p className="mi-page-sub">
+          Remplissez les informations ci-dessous — l'aperçu se met à jour en direct.
+        </p>
+      </div>
+
+      <div className="mi-grid">
+        {/* LEFT — form */}
+        <div className="mi-col mi-col--form">
+          <InvoiceForm invoice={invoice} setInvoice={setInvoice} />
+        </div>
+
+        {/* RIGHT — stats + preview */}
+        <div className="mi-col mi-col--preview">
+          {/* Dark card: total */}
+          <div className="mi-dark-card">
+            <div className="mi-dark-card-head">
+              <span className="mi-dark-label">Total de la facture</span>
+              <span className="mi-dark-icon">
+                <TrendingUp size={16} />
+              </span>
+            </div>
+            <div className="mi-dark-value">{formatFCFA(total)}</div>
+            <div className="mi-dark-sub">Mis à jour en direct</div>
+          </div>
+
+          {/* Dark card: quota */}
+          <div className="mi-dark-card">
+            <div className="mi-dark-card-head">
+              <span className="mi-dark-label">Quota ce mois</span>
+              <span className="mi-dark-icon">
+                <BarChart3 size={16} />
+              </span>
+            </div>
+            <div className="mi-dark-value mi-dark-value--big">
+              {profile?.invoices_generated ?? 0}
+              <span className="mi-dark-total">/{profile?.invoices_limit ?? 10}</span>
+            </div>
+            <div className="mi-quota-track">
+              <div
+                className="mi-quota-track-fill"
+                style={{ width: `${quotaPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* White preview */}
+          <InvoicePreview invoice={invoice} />
+        </div>
+      </div>
+
+      {/* Action bar */}
+      <div className="mi-action-bar">
         <button
           className="btn btn-generate"
           onClick={handleSave}
@@ -283,10 +341,10 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
             Passer à un plan supérieur
           </button>
         )}
-     </div>
+      </div>
 
       <PricingSection currentPlan={profile?.plan} onSelect={onUpgrade} />
-    </>
+    </main>
   );
 }
 
