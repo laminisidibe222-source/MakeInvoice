@@ -1,4 +1,4 @@
-import waveLogo from '../assets/logos/wave.png';
+import waveLogo from '../assets/logos/wave-logo.png';
 import orangeMoneyLogo from '../assets/logos/orange-money.png';
 import mixxByYasLogo from '../assets/logos/mixxyass.png';
 import cardLogo from '../assets/logos/card.png';
