@@ -94,11 +94,17 @@ function App() {
 
 
   const handleLogout = async () => {
-  // ... your existing logout code ...
-  setSession(null);
-  setProfile(null);
-  setInvoice(DEFAULT_INVOICE);
-  setShowAuth(false); // Add this line to show the landing page again
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.error('Logout error:', err);
+  } finally {
+    // Clear all local state
+    setSession(null);
+    setProfile(null);
+    setInvoice(DEFAULT_INVOICE);
+    setShowAuth(false);   // ← THIS LINE is the fix
+  }
 };
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
