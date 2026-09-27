@@ -1207,11 +1207,13 @@ textarea { resize: vertical; min-height: 90px; }
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;    /* ⬅️ était center */
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 24px 20px;          /* ⬅️ respiration en haut/bas */
+  overflow-y: auto;            /* ⬅️ permet de scroller si trop haut */
 }
 .modal {
   background: white;
@@ -1283,10 +1285,16 @@ textarea { resize: vertical; min-height: 90px; }
    ============================================================ */
 .payment-modal {
   max-width: 500px;
+  width: 100%;
+  margin: auto;                /* ⬅️ centre verticalement si possible */
   padding: 0;
   overflow: hidden;
   position: relative;
   background: white;
+  border-radius: var(--radius);
+  max-height: calc(100vh - 48px);   /* ⬅️ ne dépasse jamais l'écran */
+  display: flex;
+  flex-direction: column;
 }
 .payment-modal::before {
   content: '';
@@ -1294,20 +1302,30 @@ textarea { resize: vertical; min-height: 90px; }
   top: 0; left: 0; right: 0;
   height: 5px;
   background: linear-gradient(90deg, #6366F1, #8B5CF6, #EC4899);
+  z-index: 0;               /* ⬅️ derrière le contenu */
 }
 
 .modal-close {
   position: absolute;
-  top: 16px; right: 16px;
-  width: 34px; height: 34px;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: none;
-  background: rgba(15, 23, 42, 0.05);
-  color: var(--text-mid);
+  background: rgba(15, 23, 42, 0.08);   /* ⬅️ plus visible */
+  color: #475569;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: var(--transition);
-  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;                          /* ⬅️ au-dessus de tout */
+}
+.modal-close:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+  transform: rotate(90deg);
 }
 .modal-close:hover:not(:disabled) {
   background: rgba(239, 68, 68, 0.1);
@@ -1315,7 +1333,11 @@ textarea { resize: vertical; min-height: 90px; }
   transform: rotate(90deg);
 }
 
-.pm-header { padding: 32px 32px 20px; text-align: center; }
+.pm-header {
+  padding: 28px 32px 20px;
+  text-align: center;
+  flex-shrink: 0;             /* ⬅️ le header ne se compresse pas */
+}
 .pm-plan-badge {
   display: inline-block;
   padding: 5px 14px;
@@ -1568,12 +1590,14 @@ textarea { resize: vertical; min-height: 90px; }
 .pm-cancel:hover:not(:disabled) { background: var(--bg-soft); }
 
 .pm-legal {
-  padding: 16px 32px 22px;
+  padding: 12px 32px 20px;    /* ⬅️ moins de padding */
   font-size: 11px;
   color: var(--text-light);
   text-align: center;
   line-height: 1.5;
   font-weight: 500;
+  flex-shrink: 0;             /* ⬅️ le footer ne se compresse pas */
+  margin-top: auto;           /* ⬅️ reste collé en bas */
 }
 
 /* ============================================================
@@ -3058,7 +3082,12 @@ textarea { resize: vertical; min-height: 90px; }
   .pm-pay-btn { width: calc(100% - 40px); margin: 0 20px 10px; }
   .pm-cancel { width: calc(100% - 40px); margin: 0 20px; }
   .pm-legal { padding: 12px 20px 18px; }
-
+  /* Contenu central scrollable si trop haut */
+.pm-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
   .modal { padding: 28px 22px; }
   .modal h3 { font-size: 19px; }
 
@@ -3864,5 +3893,66 @@ html {
   .preview-header .btn-download {
     flex: 1;
     justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .modal-overlay {
+    padding: 12px 8px;
+    align-items: flex-start;
+  }
+  .payment-modal {
+    max-height: calc(100vh - 24px);
+    border-radius: 18px;
+  }
+  .pm-header {
+    padding: 22px 20px 14px;
+  }
+  .pm-title {
+    font-size: 20px;
+  }
+  .pm-subtitle {
+    font-size: 13px;
+  }
+  .pm-summary {
+    margin: 0 20px 18px;
+    padding: 16px 18px;
+  }
+  .pm-summary-price {
+    font-size: 24px;
+  }
+  .pm-methods {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 20px 16px;
+    gap: 8px;
+  }
+  .pm-method {
+    padding: 10px;
+    min-height: 56px;
+  }
+  .pm-method-label {
+    font-size: 12px;
+  }
+  .pm-method-desc {
+    font-size: 10px;
+  }
+  .pm-phone-block {
+    padding: 0 20px 14px;
+  }
+  .pm-pay-btn {
+    width: calc(100% - 40px);
+    margin: 0 20px 8px;
+    padding: 14px;
+    font-size: 14px;
+  }
+  .pm-cancel {
+    width: calc(100% - 40px);
+    margin: 0 20px;
+    padding: 10px;
+    font-size: 13px;
+  }
+  .pm-legal {
+    padding: 8px 20px 14px;
+    font-size: 10px;
   }
 }

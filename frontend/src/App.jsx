@@ -364,10 +364,15 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
         </button>
 
         {!canGenerate && (
-          <button className="btn btn-upgrade" onClick={() => onUpgrade('pro')}>
-            <Sparkles size={16} />
-            Passer à un plan supérieur
-          </button>
+          <button
+              className="btn btn-upgrade"
+              onClick={() => {
+                document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              <Sparkles size={16} />
+              Voir les plans
+            </button>
         )}
       </div>
 
