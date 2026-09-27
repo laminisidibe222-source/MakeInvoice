@@ -9,7 +9,11 @@ const app = express();
 
 // CORS — allow your frontend
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://make-invoice-rho.vercel.app',
+    'https://make-invoice-rho-*.vercel.app', // preview deployments
+  ],
   credentials: true,
 }));
 
@@ -35,9 +39,9 @@ const PLANS = {
 // ============================================
 // PayDunya base URL
 // ============================================
-const PAYDUNYA_BASE = process.env.PAYDUNYA_MODE === 'test'
-  ? 'https://app.paydunya.com/sandbox-api/v1'
-  : 'https://app.paydunya.com/api/v1';
+const PAYDUNYA_BASE = process.env.PAYDUNYA_MODE === 'production'
+  ? 'https://app.paydunya.com/api/v1'
+  : 'https://app.paydunya.com/sandbox-api/v1';
 
 // ============================================
 // Auth middleware — verifies Supabase JWT
