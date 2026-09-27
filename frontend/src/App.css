@@ -1216,11 +1216,12 @@ textarea { resize: vertical; min-height: 90px; }
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
-  align-items: flex-start;    /* ⬅️ était center */
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
-  padding: 24px 20px;          /* ⬅️ respiration en haut/bas */
-  overflow-y: auto;            /* ⬅️ permet de scroller si trop haut */
+  padding: 24px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .modal {
   background: white;
@@ -1293,13 +1294,13 @@ textarea { resize: vertical; min-height: 90px; }
 .payment-modal {
   max-width: 500px;
   width: 100%;
-  margin: auto;                /* ⬅️ centre verticalement si possible */
+  margin: auto;
   padding: 0;
   overflow: hidden;
   position: relative;
   background: white;
   border-radius: var(--radius);
-  max-height: calc(100vh - 48px);   /* ⬅️ ne dépasse jamais l'écran */
+  max-height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
 }
@@ -1341,9 +1342,10 @@ textarea { resize: vertical; min-height: 90px; }
 }
 
 .pm-header {
-  padding: 28px 32px 20px;
+  padding: 32px 32px 20px;
   text-align: center;
-  flex-shrink: 0;             /* ⬅️ le header ne se compresse pas */
+  flex-shrink: 0;
+  position: relative;
 }
 .pm-plan-badge {
   display: inline-block;
@@ -1597,14 +1599,21 @@ textarea { resize: vertical; min-height: 90px; }
 .pm-cancel:hover:not(:disabled) { background: var(--bg-soft); }
 
 .pm-legal {
-  padding: 12px 32px 20px;    /* ⬅️ moins de padding */
+  padding: 14px 32px 22px;
   font-size: 11px;
   color: var(--text-light);
   text-align: center;
   line-height: 1.5;
   font-weight: 500;
-  flex-shrink: 0;             /* ⬅️ le footer ne se compresse pas */
-  margin-top: auto;           /* ⬅️ reste collé en bas */
+  flex-shrink: 0;
+}
+
+.pm-scroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
 }
 
 /* ============================================================

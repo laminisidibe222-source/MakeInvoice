@@ -96,72 +96,75 @@ export default function PaymentModal({ plan, onClose, onSuccess, showToast }) {
         </div>
 
         {/* Price summary */}
-        <div className="pm-summary">
-          <div className="pm-summary-row">
-            <span className="pm-summary-label">Total à payer</span>
-            <span className="pm-summary-price">
-              {planData.priceFCFA.toLocaleString('fr-SN')}
-              <small>FCFA</small>
-            </span>
-          </div>
-          <div className="pm-summary-note">
-            <Shield size={13} /> Paiement sécurisé · Annulable à tout moment
-          </div>
-        </div>
-
-        {/* Payment method grid */}
-        <div className="pm-section-label">Moyen de paiement</div>
-        <div className="pm-methods">
-          {METHODS.map(({ key, label, desc, Logo, color }) => {
-            const isActive = method === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                className={`pm-method ${isActive ? 'active' : ''}`}
-                onClick={() => setMethod(key)}
-                disabled={loading}
-                style={isActive ? { '--brand-color': color } : {}}
-              >
-                <div className="pm-method-logo">
-                  <Logo size={32} />
-                </div>
-                <div className="pm-method-info">
-                  <span className="pm-method-label">{label}</span>
-                  <span className="pm-method-desc">{desc}</span>
-                </div>
-                <div className="pm-method-check">
-                  {isActive && <Check size={12} strokeWidth={3.5} />}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Phone input (mobile money only) */}
-        {activeMethod.requiresPhone && (
-          <div className="pm-phone-block">
-            <label className="pm-phone-label">
-              Numéro {activeMethod.label}
-            </label>
-            <div className="pm-phone-input">
-              <span className="pm-phone-prefix">🇸🇳 +221</span>
-              <input
-                type="tel"
-                inputMode="numeric"
-                placeholder="77 123 45 67"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                disabled={loading}
-                autoFocus
-              />
+        {/* Zone scrollable */}
+<div className="pm-scroll">
+  {/* Price summary */}
+  <div className="pm-summary">
+            <div className="pm-summary-row">
+              <span className="pm-summary-label">Total à payer</span>
+              <span className="pm-summary-price">
+                {planData.priceFCFA.toLocaleString('fr-SN')}
+                <small>FCFA</small>
+              </span>
             </div>
-            <p className="pm-phone-hint">
-              Vous recevrez une notification sur {activeMethod.label} pour valider.
-            </p>
+            <div className="pm-summary-note">
+              <Shield size={13} /> Paiement sécurisé · Annulable à tout moment
+            </div>
           </div>
-        )}
 
+          {/* Payment method grid */}
+          <div className="pm-section-label">Moyen de paiement</div>
+          <div className="pm-methods">
+            {METHODS.map(({ key, label, desc, Logo, color }) => {
+              const isActive = method === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`pm-method ${isActive ? 'active' : ''}`}
+                  onClick={() => setMethod(key)}
+                  disabled={loading}
+                  style={isActive ? { '--brand-color': color } : {}}
+                >
+                  <div className="pm-method-logo">
+                    <Logo size={32} />
+                  </div>
+                  <div className="pm-method-info">
+                    <span className="pm-method-label">{label}</span>
+                    <span className="pm-method-desc">{desc}</span>
+                  </div>
+                  <div className="pm-method-check">
+                    {isActive && <Check size={12} strokeWidth={3.5} />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Phone input (mobile money only) */}
+          {activeMethod.requiresPhone && (
+            <div className="pm-phone-block">
+              <label className="pm-phone-label">
+                Numéro {activeMethod.label}
+              </label>
+              <div className="pm-phone-input">
+                <span className="pm-phone-prefix">🇸🇳 +221</span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="77 123 45 67"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+              <p className="pm-phone-hint">
+                Vous recevrez une notification sur {activeMethod.label} pour valider.
+              </p>
+            </div>
+          )}
+        </div>
         {/* CTA */}
         <button
           className="btn pm-pay-btn"
