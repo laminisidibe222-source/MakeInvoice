@@ -1,4 +1,4 @@
-import { FileCheck2 } from 'lucide-react';
+
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
@@ -7,14 +7,14 @@ import InvoiceForm from './components/InvoiceForm';
 import InvoicePreview from './components/InvoicePreview';
 import PricingSection from './components/PricingSection';
 import PaymentModal from './components/PaymentModal';
-import { Zap, LogOut, Save, Sparkles, CheckCircle2, XCircle, Printer } from 'lucide-react';
+import { Zap, LogOut, Save, XCircle, Printer } from 'lucide-react';
 import Logo from './components/Logo';
 import LandingPage from './components/LandingPage';
 import { BarChart3, TrendingUp } from 'lucide-react';
 import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
+import Dashboard from './components/Dashbord';
 import History from './components/History';
-import { FileCheck2, Zap, Sparkles, CheckCircle2, ArrowRight, Moon, Sun } from 'lucide-react';
+import { FileCheck2, Sparkles, CheckCircle2, ArrowRight, Moon, Sun } from 'lucide-react';
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },
