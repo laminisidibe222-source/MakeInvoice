@@ -10,8 +10,11 @@ import PaymentModal from './components/PaymentModal';
 import { Zap, LogOut, Save, Sparkles, CheckCircle2, XCircle, Printer } from 'lucide-react';
 import Logo from './components/Logo';
 import LandingPage from './components/LandingPage';
-import Sidebar from './components/Sidebar';
 import { BarChart3, TrendingUp } from 'lucide-react';
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
+import History from './components/History';
+import { FileCheck2, Zap, Sparkles, CheckCircle2, ArrowRight, Moon, Sun } from 'lucide-react';
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },
@@ -33,6 +36,17 @@ function App() {
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const navigate = useNavigate();
+
+
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+
 
   // Auth state
   useEffect(() => {
@@ -132,7 +146,6 @@ if (!session) {
     <Sidebar onLogout={handleLogout} />
 
     <div className="mi-app-main">
-      {/* Top bar */}
       <header className="mi-topbar">
         <div className="mi-topbar-left">
           <div className="mi-status-pill">
@@ -152,15 +165,22 @@ if (!session) {
               <span className="mi-quota-label">factures</span>
             </div>
           )}
-          <button className="mi-icon-btn" type="button" aria-label="Mode sombre">
-            🌙
+          <button
+            className="mi-icon-btn"
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Changer le thème"
+            title={theme === 'light' ? 'Mode sombre' : 'Mode clair'}
+          >
+            {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
         </div>
       </header>
 
       <div className="mi-content">
         <Routes>
-          <Route path="/" element={
+          <Route path="/" element={<Dashboard profile={profile} />} />
+          <Route path="/new" element={
             <Workspace
               invoice={invoice}
               setInvoice={setInvoice}
@@ -170,6 +190,7 @@ if (!session) {
               onUpgrade={setSelectedPlan}
             />
           } />
+          <Route path="/history" element={<History />} />
           <Route path="/payment/success" element={
             <PaymentSuccess onDone={() => { loadProfile(); navigate('/'); }} />
           } />
@@ -190,9 +211,7 @@ if (!session) {
       />
     )}
 
-    {toast && (
-      <div className={`toast toast-${toast.type}`}>{toast.message}</div>
-    )}
+    {toast && <div className={`toast toast-${toast.type}`}>{toast.message}</div>}
   </div>
 );
 }
@@ -263,12 +282,7 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
   return (
     <main className="mi-workspace">
       {/* Title row */}
-      <div className="mi-page-head">
-        <h1 className="mi-page-title">Nouvelle facture</h1>
-        <p className="mi-page-sub">
-          Remplissez les informations ci-dessous — l'aperçu se met à jour en direct.
-        </p>
-      </div>
+      
 
       <div className="mi-grid">
         {/* LEFT — form */}
@@ -343,7 +357,7 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
         )}
       </div>
 
-      <PricingSection currentPlan={profile?.plan} onSelect={onUpgrade} />
+      
     </main>
   );
 }
