@@ -14,7 +14,7 @@ import { BarChart3, TrendingUp } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashbord';
 import History from './components/History';
-import { FileCheck2, Sparkles, CheckCircle2, ArrowRight, Moon, Sun } from 'lucide-react';
+import { FileCheck2, Sparkles, CheckCircle2, ArrowRight, Moon, Sun , Menu } from 'lucide-react';
 import './App.css'
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
@@ -36,6 +36,7 @@ function App() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
 
@@ -144,15 +145,27 @@ if (!session) {
 
  return (
   <div className="mi-app-shell">
-    <Sidebar onLogout={handleLogout} />
+    <Sidebar
+      isOpen={sidebarOpen}
+      onClose={() => setSidebarOpen(false)}
+      onLogout={handleLogout}
+    />
 
     <div className="mi-app-main">
       <header className="mi-topbar">
         <div className="mi-topbar-left">
-          <div className="mi-status-pill">
-            <span className="mi-status-dot" />
-            <span>Mode Sénégal · TVA 18%</span>
-          </div>
+            <button
+              className="mi-hamburger"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Ouvrir le menu"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div className="mi-status-pill">
+              <span className="mi-status-dot" />
+              <span>Mode Sénégal · TVA 18%</span>
+            </div>
         </div>
 
         <div className="mi-topbar-right">
