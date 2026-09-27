@@ -3791,3 +3791,31 @@ textarea { resize: vertical; min-height: 90px; }
   .jl-footer { padding: 40px 5% 24px; }
   .jl-footer-inner { grid-template-columns: 1fr; }
 }
+
+
+/* Smooth scroll for anchor navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Footer anchor links */
+.jl-footer-col a {
+  color: #6B7B6F;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.jl-footer-col a:hover {
+  color: #4A7C59;
+}
+
+/* Scroll anchor offset — avoids sticky nav covering the title */
+.jl-features,
+.jl-usecases,
+.bf-pricing {
+  scroll-margin-top: 90px;
+}
+
+/* Slight padding fix: feature cards section now needs top padding */
+.jl-features {
+  padding: 40px 5% 100px;
+}
