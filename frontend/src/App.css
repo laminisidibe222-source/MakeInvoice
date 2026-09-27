@@ -1032,6 +1032,13 @@ textarea { resize: vertical; min-height: 90px; }
   margin: 0 auto;
   text-align: center;
 }
+/* Ajouter de l'espace avant la section Tarifs dans le workspace */
+.mi-workspace .pricing-section {
+  margin-top: 60px;
+  padding-top: 40px;
+  border-top: 1px solid #EAECF0;
+  scroll-margin-top: 100px;
+}
 .pricing-section h2 {
   font-size: 38px;
   font-weight: 900;

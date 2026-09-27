@@ -375,7 +375,7 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
             </button>
         )}
       </div>
-
+      <PricingSection currentPlan={profile?.plan} onSelect={onUpgrade} />
       
     </main>
   );
