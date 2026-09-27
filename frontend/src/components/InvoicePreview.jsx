@@ -1,20 +1,75 @@
-import { Printer } from 'lucide-react';
+import { useState } from 'react';
+import { Printer, Download, Loader2 } from 'lucide-react';
+
 const formatFCFA = (n) =>
   isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
 export default function InvoicePreview({ invoice }) {
+  const [downloading, setDownloading] = useState(false);
+
   const subtotal = invoice.items.reduce((s, i) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
   const taxAmount = subtotal * ((invoice.taxRate || 0) / 100);
   const discountAmount = subtotal * ((invoice.discount || 0) / 100);
   const total = subtotal + taxAmount - discountAmount;
 
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      // Import dynamique — évite de charger la lib au démarrage
+      const html2pdf = (await import('html2pdf.js')).default;
+
+      const element = document.getElementById('invoice-paper');
+      if (!element) throw new Error('Aperçu introuvable');
+
+      const filename = `facture-${invoice.number || 'brouillon'}.pdf`;
+
+      await html2pdf()
+        .set({
+          margin: 0,
+          filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(element)
+        .save();
+    } catch (err) {
+      console.error('PDF error:', err);
+      alert("Impossible de générer le PDF. Essaie avec l'impression.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <section className="preview-section fade-in-up" style={{ animationDelay: '0.1s' }}>
       <div className="preview-header">
         <h2>✨ Aperçu en direct</h2>
-        <button className="btn btn-print" onClick={() => window.print()}>
-          <Printer size={15} /> Imprimer / PDF
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className="btn btn-print"
+            onClick={() => window.print()}
+            title="Imprimer"
+          >
+            <Printer size={15} /> Imprimer
+          </button>
+          <button
+            className="btn btn-download"
+            onClick={handleDownload}
+            disabled={downloading}
+            title="Télécharger en PDF"
+          >
+            {downloading ? (
+              <>
+                <Loader2 size={15} className="spin" /> Génération...
+              </>
+            ) : (
+              <>
+                <Download size={15} /> Télécharger PDF
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="invoice-paper" id="invoice-paper">

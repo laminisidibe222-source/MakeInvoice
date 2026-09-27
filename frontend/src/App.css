@@ -3819,3 +3819,50 @@ html {
 .jl-features {
   padding: 40px 5% 100px;
 }
+
+/* Bouton téléchargement PDF */
+.btn-download {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+.btn-download:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+}
+.btn-download:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Correctif : éviter que l'aperçu soit coupé lors de la capture */
+#invoice-paper {
+  overflow: visible !important;
+}
+
+/* Améliorer l'affichage mobile du header preview */
+@media (max-width: 600px) {
+  .preview-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .preview-header > div {
+    width: 100%;
+  }
+  .preview-header .btn-print,
+  .preview-header .btn-download {
+    flex: 1;
+    justify-content: center;
+  }
+}
