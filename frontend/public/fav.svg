@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="miGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="55%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#DB2777"/>
+    </linearGradient>
+    <radialGradient id="miShine" cx="30%" cy="15%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Rounded gradient badge -->
+  <rect width="64" height="64" rx="19" fill="url(#miGrad)"/>
+  <rect width="64" height="64" rx="19" fill="url(#miShine)"/>
+
+  <!-- Geometric M mark -->
+  <path
+    d="M14 50V20C14 17.8 15.8 16 18 16H20.5C21.5 16 22.5 16.5 23 17.4L32 33L41 17.4C41.5 16.5 42.5 16 43.5 16H46C48.2 16 50 17.8 50 20V50"
+    stroke="white"
+    stroke-width="6.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>
