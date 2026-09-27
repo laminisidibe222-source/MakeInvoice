@@ -15,6 +15,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashbord';
 import History from './components/History';
 import { FileCheck2, Sparkles, CheckCircle2, ArrowRight, Moon, Sun } from 'lucide-react';
+import './App.css'
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },
