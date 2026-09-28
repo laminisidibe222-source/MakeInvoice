@@ -3972,3 +3972,59 @@ html {
     font-size: 10px;
   }
 }
+
+.lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  background: #F2F4F7;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.lang-switcher:hover {
+  background: #E4E7EC;
+  color: #475467;
+}
+.lang-switcher .lang-active {
+  color: #0F172A;
+}
+.lang-switcher .lang-sep {
+  opacity: 0.5;
+  font-weight: 400;
+}
+
+[data-theme="dark"] .lang-switcher {
+  background: #1F2937;
+  color: #6B7280;
+}
+[data-theme="dark"] .lang-switcher:hover {
+  background: #374151;
+  color: #D1D5DB;
+}
+[data-theme="dark"] .lang-switcher .lang-active {
+  color: #F9FAFB;
+}
+
+.jl-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 900px) {
+  .jl-nav-right .lang-switcher { display: none; }
+}
+.auth2-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+.auth2-top-row .auth2-logo { margin-bottom: 0; }

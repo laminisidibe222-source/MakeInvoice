@@ -1,26 +1,32 @@
 import {
   FileText, Eye, Download, Shield, CheckCircle2, ArrowRight,
-  Lock, Globe, Printer, Sparkles, Palette, Send,
+  Lock, Globe, Printer, Sparkles, Palette,
 } from 'lucide-react';
 import Logo from './Logo';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useLang } from '../i18n/LanguageContext';
 
 /* ============================================
-   NAV — all links are real anchors
+   NAV
    ============================================ */
 function Nav({ onGetStarted }) {
+  const { t } = useLang();
   return (
     <header className="jl-nav">
       <Logo size={28} />
 
       <nav className="jl-nav-links">
-        <a href="#fonctionnalites">Fonctionnalités</a>
-        <a href="#cas-usage">Cas d'usage</a>
-        <a href="#tarifs">Tarifs</a>
+        <a href="#fonctionnalites">{t('nav.features')}</a>
+        <a href="#cas-usage">{t('nav.useCases')}</a>
+        <a href="#tarifs">{t('nav.pricing')}</a>
       </nav>
 
-      <button className="jl-nav-cta" onClick={onGetStarted}>
-        Se connecter
-      </button>
+      <div className="jl-nav-right">
+        <LanguageSwitcher />
+        <button className="jl-nav-cta" onClick={onGetStarted}>
+          {t('nav.login')}
+        </button>
+      </div>
     </header>
   );
 }
@@ -29,21 +35,18 @@ function Nav({ onGetStarted }) {
    HERO
    ============================================ */
 function Hero({ onGetStarted }) {
+  const { t } = useLang();
   return (
     <section className="jl-hero">
       <div className="jl-hero-inner">
         <div className="jl-hero-text">
           <h1 className="jl-hero-title">
-            Vos factures,<br />
-            <em>avec élégance.</em>
+            {t('hero.titleLine1')}<br />
+            <em>{t('hero.titleLine2')}</em>
           </h1>
-          <p className="jl-hero-sub">
-            Générez, personnalisez et exportez vos factures
-            professionnelles en moins de deux minutes.
-            Conçu pour les freelances et PME du Sénégal.
-          </p>
+          <p className="jl-hero-sub">{t('hero.subtitle')}</p>
           <button className="jl-btn-primary" onClick={onGetStarted}>
-            Commencer maintenant
+            {t('hero.cta')}
             <ArrowRight size={16} />
           </button>
         </div>
@@ -51,20 +54,20 @@ function Hero({ onGetStarted }) {
         <div className="jl-hero-visual">
           <div className="jl-invoice-mock">
             <div className="jl-invoice-top">
-              <span className="jl-invoice-brand">Mon Entreprise SARL</span>
+              <span className="jl-invoice-brand">Acme Studio</span>
               <span className="jl-invoice-num">N° INV-042</span>
             </div>
             <div className="jl-invoice-client">
-              <span className="jl-invoice-label">FACTURÉ À</span>
-              <strong>Aly Diop · Dakar</strong>
+              <span className="jl-invoice-label">{t('preview.billedTo')}</span>
+              <strong>John Smith</strong>
             </div>
             <div className="jl-invoice-lines">
-              <div><span>Prestation de service</span><span>50 000 FCFA</span></div>
-              <div><span>Design graphique</span><span>25 000 FCFA</span></div>
-              <div><span>TVA (18%)</span><span>13 500 FCFA</span></div>
+              <div><span>Consulting service</span><span>50 000 FCFA</span></div>
+              <div><span>Graphic design</span><span>25 000 FCFA</span></div>
+              <div><span>{t('whatIs.previewVat')} (18%)</span><span>13 500 FCFA</span></div>
             </div>
             <div className="jl-invoice-total">
-              <span>Total</span>
+              <span>{t('preview.grandTotal')}</span>
               <strong>88 500 FCFA</strong>
             </div>
           </div>
@@ -78,10 +81,11 @@ function Hero({ onGetStarted }) {
    QUICK STRIP
    ============================================ */
 function QuickStrip() {
+  const { t } = useLang();
   const items = [
-    { icon: <Eye size={18} />, label: 'Aperçu en direct', value: 'Voyez la facture se construire' },
-    { icon: <Download size={18} />, label: 'Export PDF', value: 'Téléchargez en 1 clic' },
-    { icon: <Palette size={18} />, label: 'TVA & remises', value: 'Calculs automatiques' },
+    { icon: <Eye size={18} />, label: t('quickStrip.livePreview'), value: t('quickStrip.livePreviewDesc') },
+    { icon: <Download size={18} />, label: t('quickStrip.pdfExport'), value: t('quickStrip.pdfExportDesc') },
+    { icon: <Palette size={18} />, label: t('quickStrip.vatDiscounts'), value: t('quickStrip.vatDiscountsDesc') },
   ];
 
   return (
@@ -105,43 +109,35 @@ function QuickStrip() {
    WHAT IS
    ============================================ */
 function WhatIs() {
+  const { t } = useLang();
   return (
     <section className="jl-whatis">
       <h2 className="jl-title-center">
-        Ce que MakeInvoice<br /> fait pour vous
+        {t('whatIs.title1')}<br /> {t('whatIs.title2')}
       </h2>
 
       <div className="jl-two-col">
         <div className="jl-text-col">
-          <p>
-            MakeInvoice est un générateur de factures en ligne, pensé
-            pour le marché sénégalais. Renseignez vos informations, celles
-            de votre client, et vos lignes de prestation — l'aperçu se
-            construit en direct.
-          </p>
-          <p>
-            Ajoutez la TVA (18 % par défaut), appliquez des remises, puis
-            exportez votre facture en PDF haute qualité, prête à envoyer
-            par email ou WhatsApp.
-          </p>
+          <p>{t('whatIs.p1')}</p>
+          <p>{t('whatIs.p2')}</p>
         </div>
 
         <div className="jl-visual-col">
           <div className="jl-preview-block">
             <div className="jl-preview-row">
-              <span className="jl-preview-label">N°</span>
+              <span className="jl-preview-label">{t('whatIs.previewNum')}</span>
               <span className="jl-preview-value">INV-000042</span>
             </div>
             <div className="jl-preview-row">
-              <span className="jl-preview-label">Client</span>
-              <span className="jl-preview-value">Aly Diop</span>
+              <span className="jl-preview-label">{t('whatIs.previewClient')}</span>
+              <span className="jl-preview-value">John Smith</span>
             </div>
             <div className="jl-preview-row">
-              <span className="jl-preview-label">TVA</span>
+              <span className="jl-preview-label">{t('whatIs.previewVat')}</span>
               <span className="jl-preview-value">18 %</span>
             </div>
             <div className="jl-preview-row jl-preview-row--total">
-              <span className="jl-preview-label">Total</span>
+              <span className="jl-preview-label">{t('whatIs.previewTotal')}</span>
               <span className="jl-preview-value jl-preview-total">88 500 FCFA</span>
             </div>
           </div>
@@ -152,25 +148,14 @@ function WhatIs() {
 }
 
 /* ============================================
-   FEATURE CARDS — no fake links, just real content
+   FEATURE CARDS
    ============================================ */
 function FeatureCards() {
+  const { t } = useLang();
   const items = [
-    {
-      icon: <Eye size={20} />,
-      title: 'Aperçu en direct',
-      desc: "Chaque champ rempli met instantanément à jour votre facture. Voyez le rendu final avant d'exporter.",
-    },
-    {
-      icon: <Download size={20} />,
-      title: 'Export PDF instantané',
-      desc: "Téléchargez ou imprimez votre facture en PDF haute qualité. Prête à envoyer à votre client.",
-    },
-    {
-      icon: <Shield size={20} />,
-      title: 'TVA & remises automatiques',
-      desc: "Le calcul de la TVA (18 %) et des remises se fait tout seul. Aucun risque d'erreur.",
-    },
+    { icon: <Eye size={20} />, title: t('features.liveTitle'), desc: t('features.liveDesc') },
+    { icon: <Download size={20} />, title: t('features.pdfTitle'), desc: t('features.pdfDesc') },
+    { icon: <Shield size={20} />, title: t('features.vatTitle'), desc: t('features.vatDesc') },
   ];
 
   return (
@@ -192,9 +177,10 @@ function FeatureCards() {
    USE CASES
    ============================================ */
 function SectionUseCases() {
+  const { t } = useLang();
   return (
     <section className="jl-usecases" id="cas-usage">
-      <h2 className="jl-title-center">Pour qui ?</h2>
+      <h2 className="jl-title-center">{t('useCases.title')}</h2>
 
       <div className="jl-two-col jl-two-col--reverse">
         <div className="jl-visual-col">
@@ -202,29 +188,21 @@ function SectionUseCases() {
             <div className="jl-usecases-visual-inner">
               <FileText size={28} className="jl-usecases-visual-icon" />
               <div className="jl-usecases-visual-title">
-                Facture prête à envoyer
+                {t('useCases.readyTitle')}
               </div>
               <div className="jl-usecases-visual-sub">
-                Générée en 2 min · PDF · 88 500 FCFA
+                {t('useCases.readyDesc')}
               </div>
             </div>
           </div>
         </div>
 
         <div className="jl-text-col">
-          <h3 className="jl-subheading">Freelances & Consultants</h3>
-          <p>
-            Créez une facture pour chaque mission, avec vos coordonnées
-            et celles de votre client. Exportez en PDF et envoyez — sans
-            tableur, sans logiciel compliqué.
-          </p>
+          <h3 className="jl-subheading">{t('useCases.freelancers')}</h3>
+          <p>{t('useCases.freelancersDesc')}</p>
 
-          <h3 className="jl-subheading">Petites entreprises</h3>
-          <p>
-            Gérez vos factures simplement. Historique, TVA, remises,
-            export — tout ce dont vous avez besoin pour facturer
-            proprement.
-          </p>
+          <h3 className="jl-subheading">{t('useCases.smallBusiness')}</h3>
+          <p>{t('useCases.smallBusinessDesc')}</p>
         </div>
       </div>
     </section>
@@ -232,40 +210,43 @@ function SectionUseCases() {
 }
 
 /* ============================================
-   PRICING — real section, real prices
+   PRICING
    ============================================ */
 function Pricing({ onGetStarted }) {
+  const { t } = useLang();
   const plans = [
     {
-      key: 'starter', name: 'Starter', priceUSD: 7, priceFCFA: 4500,
-      features: ['10 factures / mois', 'Export PDF', 'TVA & remises', 'Support email'],
+      key: 'starter', name: t('pricing.starter'), priceUSD: 7, priceFCFA: 4500,
+      features: [t('pricing.feat10'), t('pricing.featPdf'), t('pricing.featVat'), t('pricing.featEmail')],
     },
     {
-      key: 'pro', name: 'Pro', priceUSD: 12, priceFCFA: 7500,
-      features: ['30 factures / mois', 'Tous les modèles', 'Export PDF & CSV', 'Support prioritaire'],
+      key: 'pro', name: t('pricing.pro'), priceUSD: 12, priceFCFA: 7500,
+      features: [t('pricing.feat30'), t('pricing.featAllTemplates'), t('pricing.featPdfCsv'), t('pricing.featPriority')],
       popular: true,
     },
     {
-      key: 'business', name: 'Business', priceUSD: 20, priceFCFA: 12000,
-      features: ['100 factures / mois', 'API & intégrations', 'Support dédié', 'Multi-utilisateurs'],
+      key: 'business', name: t('pricing.business'), priceUSD: 20, priceFCFA: 12000,
+      features: [t('pricing.feat100'), t('pricing.featApi'), t('pricing.featDedicated'), t('pricing.featMulti')],
     },
   ];
 
   return (
     <section className="bf-pricing" id="tarifs">
       <div className="bf-pricing-head">
-        <h2>Des prix simples. Aucune surprise.</h2>
-        <p>Payez par Wave, Orange Money, Mixx by Yas ou carte. Annulable à tout moment.</p>
+        <h2>{t('pricing.title')}</h2>
+        <p>{t('pricing.subtitle')}</p>
       </div>
 
       <div className="bf-pricing-grid">
         {plans.map((p) => (
           <div key={p.key} className={`bf-plan ${p.popular ? 'bf-plan--popular' : ''}`}>
-            {p.popular && <div className="bf-plan-badge">Recommandé</div>}
+            {p.popular && <div className="bf-plan-badge">{t('pricing.recommended')}</div>}
             <div className="bf-plan-name">{p.name}</div>
             <div className="bf-plan-price">
               <span className="bf-plan-usd">${p.priceUSD}</span>
-              <span className="bf-plan-fcfa">{p.priceFCFA.toLocaleString('fr-SN')} FCFA / mois</span>
+              <span className="bf-plan-fcfa">
+                {p.priceFCFA.toLocaleString('fr-SN')} {t('pricing.perMonth')}
+              </span>
             </div>
             <ul className="bf-plan-features">
               {p.features.map((f, i) => (
@@ -273,7 +254,7 @@ function Pricing({ onGetStarted }) {
               ))}
             </ul>
             <button className="bf-plan-btn" onClick={onGetStarted}>
-              Choisir {p.name}
+              {t('pricing.choose')} {p.name}
               <ArrowRight size={15} />
             </button>
           </div>
@@ -287,21 +268,22 @@ function Pricing({ onGetStarted }) {
    FINAL CTA
    ============================================ */
 function FinalCTA({ onGetStarted }) {
+  const { t } = useLang();
   return (
     <section className="jl-final">
       <div className="jl-final-inner">
         <Sparkles size={28} className="jl-final-icon" />
-        <h2>Prêt à créer votre<br /> première facture ?</h2>
-        <p>Inscription gratuite. Aucune carte bancaire requise.</p>
+        <h2>{t('finalCta.title1')}<br /> {t('finalCta.title2')}</h2>
+        <p>{t('finalCta.subtitle')}</p>
 
         <div className="jl-final-badges">
-          <span className="jl-final-badge"><Lock size={12} /> Sécurisé</span>
-          <span className="jl-final-badge"><Globe size={12} /> Sénégal</span>
-          <span className="jl-final-badge"><Printer size={12} /> PDF</span>
+          <span className="jl-final-badge"><Lock size={12} /> {t('finalCta.secure')}</span>
+          <span className="jl-final-badge"><Globe size={12} /> {t('finalCta.senegal')}</span>
+          <span className="jl-final-badge"><Printer size={12} /> {t('finalCta.pdf')}</span>
         </div>
 
         <button className="jl-btn-primary jl-btn-primary--light" onClick={onGetStarted}>
-          Commencer maintenant
+          {t('finalCta.cta')}
           <ArrowRight size={16} />
         </button>
       </div>
@@ -310,39 +292,45 @@ function FinalCTA({ onGetStarted }) {
 }
 
 /* ============================================
-   FOOTER — only real links
+   FOOTER
    ============================================ */
 function Footer({ onGetStarted }) {
+  const { t } = useLang();
   return (
     <footer className="jl-footer">
       <div className="jl-footer-inner">
         <div className="jl-footer-col jl-footer-col--brand">
           <Logo size={28} />
-          <p>
-            Générateur de factures en ligne pour les freelances
-            et PME du Sénégal.
-          </p>
+          <p>{t('footer.tagline')}</p>
         </div>
 
         <div className="jl-footer-col">
-          <h4>Produit</h4>
+          <h4>{t('footer.product')}</h4>
           <ul>
-            <li><a href="#fonctionnalites">Fonctionnalités</a></li>
-            <li><a href="#cas-usage">Cas d'usage</a></li>
-            <li><a href="#tarifs">Tarifs</a></li>
+            <li><a href="#fonctionnalites">{t('footer.features')}</a></li>
+            <li><a href="#cas-usage">{t('footer.useCases')}</a></li>
+            <li><a href="#tarifs">{t('footer.pricing')}</a></li>
           </ul>
         </div>
 
         <div className="jl-footer-col">
-          <h4>Compte</h4>
+          <h4>{t('footer.account')}</h4>
           <ul>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onGetStarted(); }}>Se connecter</a></li>
-            <li><a href="#" onClick={(e) => { e.preventDefault(); onGetStarted(); }}>Créer un compte</a></li>
+            <li>
+              <a href="#" onClick={(e) => { e.preventDefault(); onGetStarted(); }}>
+                {t('footer.login')}
+              </a>
+            </li>
+            <li>
+              <a href="#" onClick={(e) => { e.preventDefault(); onGetStarted(); }}>
+                {t('footer.signup')}
+              </a>
+            </li>
           </ul>
         </div>
 
         <div className="jl-footer-col">
-          <h4>Contact</h4>
+          <h4>{t('footer.contact')}</h4>
           <ul>
             <li>
               <a href="mailto:contact@makeinvoice.app">contact@makeinvoice.app</a>
@@ -352,7 +340,7 @@ function Footer({ onGetStarted }) {
       </div>
 
       <div className="jl-footer-bottom">
-        © {new Date().getFullYear()} MakeInvoice — Tous droits réservés.
+        © {new Date().getFullYear()} MakeInvoice — {t('footer.rights')}
       </div>
     </footer>
   );

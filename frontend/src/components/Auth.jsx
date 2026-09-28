@@ -4,8 +4,11 @@ import {
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import Logo from './Logo';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useLang } from '../i18n/LanguageContext';
 
 export default function Auth({ onAuth }) {
+  const { t } = useLang();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +37,7 @@ export default function Auth({ onAuth }) {
         if (data.session) {
           onAuth(data.session);
         } else {
-          setError('Vérifiez votre email pour confirmer votre compte.');
+          setError(t('auth.errorConfirmEmail'));
         }
       }
     } catch (err) {
@@ -45,7 +48,7 @@ export default function Auth({ onAuth }) {
   };
 
   const handleSocial = (provider) => {
-    setError(`Connexion via ${provider} bientôt disponible.`);
+    setError(`Coming soon: ${provider}`);
   };
 
   return (
@@ -55,37 +58,36 @@ export default function Auth({ onAuth }) {
         <div className="auth2-left">
           <Asterisk className="auth2-asterisk" size={30} strokeWidth={2.5} />
           <div className="auth2-left-content">
-            <div className="auth2-left-eyebrow">Vous pouvez facilement</div>
-            <h3 className="auth2-left-title">
-              Accédez à votre espace personnel pour créer vos factures en toute clarté.
-            </h3>
+            <div className="auth2-left-eyebrow">{t('auth.leftEyebrow')}</div>
+            <h3 className="auth2-left-title">{t('auth.leftTitle')}</h3>
           </div>
         </div>
 
         {/* RIGHT — form panel */}
         <div className="auth2-right">
-          <div className="auth2-logo">
-            <Logo size={32} showText={false} />
+          <div className="auth2-top-row">
+            <div className="auth2-logo">
+              <Logo size={32} showText={false} />
+            </div>
+            <LanguageSwitcher />
           </div>
 
           <h2 className="auth2-title">
-            {mode === 'login' ? 'Connectez-vous' : 'Créez un compte'}
+            {mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
           </h2>
           <p className="auth2-subtitle">
-            {mode === 'login'
-              ? 'Accédez à vos factures, à tout moment, en un seul endroit.'
-              : 'Quelques secondes suffisent pour commencer à facturer.'}
+            {mode === 'login' ? t('auth.subtitleLogin') : t('auth.subtitleSignup')}
           </p>
 
           <form onSubmit={handleSubmit} className="auth2-form">
             {mode === 'signup' && (
               <label className="auth2-field">
-                <span className="auth2-label">Nom complet</span>
+                <span className="auth2-label">{t('auth.fullName')}</span>
                 <div className="auth2-input-wrap">
                   <UserIcon size={16} className="auth2-input-icon" />
                   <input
                     type="text"
-                    placeholder="Ex : Aly Diop"
+                    placeholder={t('auth.fullNamePlaceholder')}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -95,12 +97,12 @@ export default function Auth({ onAuth }) {
             )}
 
             <label className="auth2-field">
-              <span className="auth2-label">Votre email</span>
+              <span className="auth2-label">{t('auth.email')}</span>
               <div className="auth2-input-wrap">
                 <Mail size={16} className="auth2-input-icon" />
                 <input
                   type="email"
-                  placeholder="vous@exemple.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -109,7 +111,7 @@ export default function Auth({ onAuth }) {
             </label>
 
             <label className="auth2-field">
-              <span className="auth2-label">Mot de passe</span>
+              <span className="auth2-label">{t('auth.password')}</span>
               <div className="auth2-input-wrap">
                 <Lock size={16} className="auth2-input-icon" />
                 <input
@@ -125,7 +127,6 @@ export default function Auth({ onAuth }) {
                   className="auth2-eye"
                   onClick={() => setShowPassword(!showPassword)}
                   tabIndex={-1}
-                  aria-label="Afficher le mot de passe"
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -136,21 +137,19 @@ export default function Auth({ onAuth }) {
 
             <button type="submit" className="auth2-submit" disabled={loading}>
               {loading
-                ? 'Chargement...'
+                ? t('auth.loading')
                 : mode === 'login'
-                ? 'Se connecter'
-                : 'Créer mon compte'}
+                ? t('auth.loginBtn')
+                : t('auth.signupBtn')}
             </button>
           </form>
 
           <div className="auth2-divider">
-            <span>ou continuer avec</span>
+            <span>{t('auth.orContinueWith')}</span>
           </div>
 
           <div className="auth2-socials">
-            <button type="button" className="auth2-social" onClick={() => handleSocial('Bépo')}>
-              Bé
-            </button>
+            <button type="button" className="auth2-social" onClick={() => handleSocial('Bépo')}>Bé</button>
             <button type="button" className="auth2-social" onClick={() => handleSocial('Google')}>
               <span className="auth2-social-g">G</span>
             </button>
@@ -160,7 +159,7 @@ export default function Auth({ onAuth }) {
           </div>
 
           <p className="auth2-toggle">
-            {mode === 'login' ? 'Pas de compte ? ' : 'Déjà inscrit ? '}
+            {mode === 'login' ? t('auth.noAccount') : t('auth.haveAccount')}{' '}
             <button
               type="button"
               onClick={() => {
@@ -168,7 +167,7 @@ export default function Auth({ onAuth }) {
                 setError('');
               }}
             >
-              {mode === 'login' ? "S'inscrire" : 'Se connecter'}
+              {mode === 'login' ? t('auth.signupLink') : t('auth.loginLink')}
             </button>
           </p>
         </div>

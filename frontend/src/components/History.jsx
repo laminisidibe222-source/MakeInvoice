@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { FileText, Search, Calendar, Download } from 'lucide-react';
+import { FileText, Search, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
+import { useLang } from '../i18n/LanguageContext';
 
 export default function History() {
+  const { t } = useLang();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -32,13 +34,14 @@ export default function History() {
     );
   });
 
+  const countLabel =
+    filtered.length === 1 ? t('history.count') : t('history.countPlural');
+
   return (
     <main className="mi-workspace">
       <div className="mi-page-head">
-        <h1 className="mi-page-title">Historique</h1>
-        <p className="mi-page-sub">
-          Toutes vos factures, en un seul endroit.
-        </p>
+        <h1 className="mi-page-title">{t('history.title')}</h1>
+        <p className="mi-page-sub">{t('history.subtitle')}</p>
       </div>
 
       <div className="mi-panel">
@@ -47,30 +50,30 @@ export default function History() {
             <Search size={16} />
             <input
               type="text"
-              placeholder="Rechercher par n° ou client..."
+              placeholder={t('history.searchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
           <span className="mi-count">
-            {filtered.length} facture{filtered.length !== 1 ? 's' : ''}
+            {filtered.length} {countLabel}
           </span>
         </div>
 
         {loading ? (
-          <div className="mi-empty">Chargement...</div>
+          <div className="mi-empty">{t('history.loading')}</div>
         ) : filtered.length === 0 ? (
           <div className="mi-empty">
             <FileText size={28} />
-            <p>{query ? 'Aucun résultat.' : 'Aucune facture pour le moment.'}</p>
+            <p>{query ? t('history.noResults') : t('history.noInvoices')}</p>
           </div>
         ) : (
           <div className="mi-table">
             <div className="mi-table-head">
-              <span>N° Facture</span>
-              <span>Client</span>
-              <span>Date</span>
-              <span className="mi-table-right">Total</span>
+              <span>{t('history.tableNum')}</span>
+              <span>{t('history.tableClient')}</span>
+              <span>{t('history.tableDate')}</span>
+              <span className="mi-table-right">{t('history.tableTotal')}</span>
             </div>
             {filtered.map((inv) => (
               <div className="mi-table-row" key={inv.id}>

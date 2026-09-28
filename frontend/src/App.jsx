@@ -16,6 +16,8 @@ import Dashboard from './components/Dashbord';
 import History from './components/History';
 import { FileCheck2, Sparkles, CheckCircle2, ArrowRight, Moon, Sun , Menu } from 'lucide-react';
 import './App.css'
+import { useLang } from './i18n/LanguageContext';
+import LanguageSwitcher from './components/LanguageSwitcher';
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },
@@ -41,7 +43,7 @@ function App() {
 
 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-
+  const { t } = useLang();
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -164,7 +166,7 @@ if (!session) {
 
             <div className="mi-status-pill">
               <span className="mi-status-dot" />
-              <span>Mode Sénégal · TVA 18%</span>
+              <span>{t('topbar.mode')}</span>
             </div>
         </div>
 
@@ -176,9 +178,12 @@ if (!session) {
                 <span className="mi-quota-sep">/</span>
                 {profile.invoices_limit}
               </span>
-              <span className="mi-quota-label">factures</span>
+              <span className="mi-quota-label">{t('topbar.invoices')}</span>
             </div>
           )}
+
+          <LanguageSwitcher />
+
           <button
             className="mi-icon-btn"
             type="button"
@@ -232,7 +237,7 @@ if (!session) {
 function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpgrade }) {
   const canGenerate = profile && profile.invoices_generated < profile.invoices_limit;
   const [saving, setSaving] = useState(false);
-
+  const{t} = useLang();
   // Live total of the current invoice
   const subtotal = invoice.items.reduce((s, i) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
   const taxAmount = subtotal * ((invoice.taxRate || 0) / 100);
@@ -245,8 +250,8 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
 
   const handleSave = async () => {
     if (!canGenerate) {
-      showToast('Quota atteint. Passez à un plan supérieur.', 'error');
-      return;
+    showToast(t('toast.quotaError'), 'error');
+    return;
     }
     setSaving(true);
     try {
@@ -281,7 +286,7 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
         throw new Error(err.error);
       }
 
-      showToast('Facture enregistrée !', 'success');
+      showToast(t('toast.invoiceSaved'), 'success');
       await loadProfile();
     } catch (err) {
       showToast(err.message, 'error');
@@ -294,94 +299,45 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
   return (
+    
     <main className="mi-workspace">
-      {/* Title row */}
-      
-
-      <div className="mi-grid">
-        {/* LEFT — form */}
-        <div className="mi-col mi-col--form">
-          <InvoiceForm invoice={invoice} setInvoice={setInvoice} />
-        </div>
-
-        {/* RIGHT — stats + preview */}
-        <div className="mi-col mi-col--preview">
-          {/* Dark card: total */}
-          <div className="mi-dark-card">
-            <div className="mi-dark-card-head">
-              <span className="mi-dark-label">Total de la facture</span>
-              <span className="mi-dark-icon">
-                <TrendingUp size={16} />
-              </span>
-            </div>
-            <div className="mi-dark-value">{formatFCFA(total)}</div>
-            <div className="mi-dark-sub">Mis à jour en direct</div>
-          </div>
-
-          {/* Dark card: quota */}
-          <div className="mi-dark-card">
-            <div className="mi-dark-card-head">
-              <span className="mi-dark-label">Quota ce mois</span>
-              <span className="mi-dark-icon">
-                <BarChart3 size={16} />
-              </span>
-            </div>
-            <div className="mi-dark-value mi-dark-value--big">
-              {profile?.invoices_generated ?? 0}
-              <span className="mi-dark-total">/{profile?.invoices_limit ?? 10}</span>
-            </div>
-            <div className="mi-quota-track">
-              <div
-                className="mi-quota-track-fill"
-                style={{ width: `${quotaPercent}%` }}
-              />
-            </div>
-          </div>
-
-          {/* White preview */}
-          <InvoicePreview invoice={invoice} />
-        </div>
-      </div>
-
-      {/* Action bar */}
+      {/* ... */}
       <div className="mi-action-bar">
-        <button
-          className="btn btn-generate"
-          onClick={handleSave}
-          disabled={saving || !canGenerate}
-        >
+        <button className="btn btn-generate" onClick={handleSave} disabled={saving || !canGenerate}>
           {saving ? (
             <>
               <span className="spinner-mini" />
-              Enregistrement...
+              {t('form.saving')}
             </>
           ) : (
             <>
               <FileCheck2 size={18} strokeWidth={2.4} />
-              {canGenerate ? 'Enregistrer la facture' : 'Quota atteint'}
+              {canGenerate ? t('form.saveInvoice') : t('form.quotaReached')}
             </>
           )}
         </button>
 
         {!canGenerate && (
           <button
-              className="btn btn-upgrade"
-              onClick={() => {
-                document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              <Sparkles size={16} />
-              Voir les plans
-            </button>
+            className="btn btn-upgrade"
+            onClick={() => {
+              document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            <Sparkles size={16} />
+            {t('form.viewPlans')}
+          </button>
         )}
       </div>
+
       <PricingSection currentPlan={profile?.plan} onSelect={onUpgrade} />
-      
     </main>
   );
 }
 
 function PaymentSuccess({ onDone }) {
+
+  const {t} = useLang();
   useEffect(() => {
     const t = setTimeout(onDone, 3000);
     return () => clearTimeout(t);
@@ -392,20 +348,22 @@ function PaymentSuccess({ onDone }) {
         <div className="checkmark">
           <CheckCircle2 size={44} strokeWidth={2.5} />
         </div>
-        <h3>Paiement réussi !</h3>
-        <p>Votre plan a été activé. Redirection en cours...</p>
+        <h3>{t('payment.successTitle')}</h3>
+        <p>{t('payment.successDesc')}</p>
       </div>
     </div>
   );
 }
 
 function PaymentCancel({ onDone }) {
+
+  const {t} = useLang();
   return (
     <div className="payment-page">
       <div className="payment-cancel">
-        <h3>Paiement annulé</h3>
-        <p>Vous n'avez pas été débité.</p>
-        <button className="btn btn-plan" onClick={onDone}>Retour</button>
+        <h3> {t('payment.cancelTitle')} </h3>
+        <p>{t('payment.cancelDesc')}</p>
+        <button className="btn btn-plan" onClick={onDone}>{t('payment.back')}</button>
       </div>
     </div>
   );

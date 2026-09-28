@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Plus, ArrowRight, TrendingUp, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
+import { useLang } from '../i18n/LanguageContext';
 
 export default function Dashboard({ profile }) {
+  const { t } = useLang();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,17 +35,14 @@ export default function Dashboard({ profile }) {
   return (
     <main className="mi-workspace">
       <div className="mi-page-head">
-        <h1 className="mi-page-title">Bonjour 👋</h1>
-        <p className="mi-page-sub">
-          Voici un aperçu de votre activité de facturation.
-        </p>
+        <h1 className="mi-page-title">{t('dashboard.hello')}</h1>
+        <p className="mi-page-sub">{t('dashboard.subtitle')}</p>
       </div>
 
-      {/* Stats */}
       <div className="mi-stats-grid">
         <div className="mi-dark-card">
           <div className="mi-dark-card-head">
-            <span className="mi-dark-label">Factures ce mois</span>
+            <span className="mi-dark-label">{t('dashboard.invoicesThisMonth')}</span>
             <span className="mi-dark-icon"><FileText size={16} /></span>
           </div>
           <div className="mi-dark-value mi-dark-value--big">
@@ -57,40 +56,39 @@ export default function Dashboard({ profile }) {
 
         <div className="mi-dark-card">
           <div className="mi-dark-card-head">
-            <span className="mi-dark-label">Total facturé</span>
+            <span className="mi-dark-label">{t('dashboard.totalBilled')}</span>
             <span className="mi-dark-icon"><TrendingUp size={16} /></span>
           </div>
           <div className="mi-dark-value">{formatFCFA(totalBilled)}</div>
-          <div className="mi-dark-sub">Sur les 5 dernières factures</div>
+          <div className="mi-dark-sub">{t('dashboard.lastFive')}</div>
         </div>
 
         <Link to="/new" className="mi-cta-card">
           <div className="mi-cta-icon"><Plus size={22} strokeWidth={2.5} /></div>
           <div>
-            <div className="mi-cta-title">Nouvelle facture</div>
-            <div className="mi-cta-sub">Créer en 2 minutes</div>
+            <div className="mi-cta-title">{t('dashboard.newInvoice')}</div>
+            <div className="mi-cta-sub">{t('dashboard.newInvoiceDesc')}</div>
           </div>
           <ArrowRight size={18} className="mi-cta-arrow" />
         </Link>
       </div>
 
-      {/* Recent invoices */}
       <div className="mi-panel">
         <div className="mi-panel-head">
-          <h2>Factures récentes</h2>
+          <h2>{t('dashboard.recentInvoices')}</h2>
           <Link to="/history" className="mi-panel-link">
-            Voir tout <ArrowRight size={14} />
+            {t('dashboard.viewAll')} <ArrowRight size={14} />
           </Link>
         </div>
 
         {loading ? (
-          <div className="mi-empty">Chargement...</div>
+          <div className="mi-empty">{t('dashboard.loading')}</div>
         ) : invoices.length === 0 ? (
           <div className="mi-empty">
             <FileText size={28} />
-            <p>Aucune facture pour le moment.</p>
+            <p>{t('dashboard.noInvoices')}</p>
             <Link to="/new" className="btn btn-generate" style={{ marginTop: 12 }}>
-              <Plus size={16} /> Créer ma première facture
+              <Plus size={16} /> {t('dashboard.createFirst')}
             </Link>
           </div>
         ) : (
@@ -108,9 +106,7 @@ export default function Dashboard({ profile }) {
                   <Calendar size={13} />
                   {inv.issue_date || '—'}
                 </div>
-                <div className="mi-invoice-row-total">
-                  {formatFCFA(inv.total)}
-                </div>
+                <div className="mi-invoice-row-total">{formatFCFA(inv.total)}</div>
               </div>
             ))}
           </div>
