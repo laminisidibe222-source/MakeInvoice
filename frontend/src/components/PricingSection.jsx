@@ -1,45 +1,74 @@
 import { Check, ArrowRight } from 'lucide-react';
-
-const PLANS = [
-  {
-    key: 'starter', name: 'Starter', priceUSD: 7, priceFCFA: 4500, limit: 10,
-    features: ['10 factures / mois', 'Export PDF', 'Support email'],
-  },
-  {
-    key: 'pro', name: 'Pro', priceUSD: 12, priceFCFA: 7500, limit: 30,
-    features: ['30 factures / mois', 'Tous les modèles', 'Export PDF & CSV', 'Support prioritaire'],
-    popular: true,
-  },
-  {
-    key: 'business', name: 'Business', priceUSD: 20, priceFCFA: 12000, limit: 100,
-    features: ['100 factures / mois', 'API & intégrations', 'Support dédié', 'Multi-utilisateurs'],
-  },
-];
+import { useLang } from '../i18n/LanguageContext';
 
 export default function PricingSection({ currentPlan, onSelect }) {
+  const { t } = useLang();
+
+  const plans = [
+    {
+      key: 'starter',
+      name: t('pricing.starter'),
+      priceUSD: 7,
+      priceFCFA: 4500,
+      features: [
+        t('pricing.feat10'),
+        t('pricing.featPdf'),
+        t('pricing.featVat'),
+        t('pricing.featEmail'),
+      ],
+    },
+    {
+      key: 'pro',
+      name: t('pricing.pro'),
+      priceUSD: 12,
+      priceFCFA: 7500,
+      features: [
+        t('pricing.feat30'),
+        t('pricing.featAllTemplates'),
+        t('pricing.featPdfCsv'),
+        t('pricing.featPriority'),
+      ],
+      popular: true,
+    },
+    {
+      key: 'business',
+      name: t('pricing.business'),
+      priceUSD: 20,
+      priceFCFA: 12000,
+      features: [
+        t('pricing.feat100'),
+        t('pricing.featApi'),
+        t('pricing.featDedicated'),
+        t('pricing.featMulti'),
+      ],
+    },
+  ];
+
   return (
     <section id="pricing" className="pricing-section">
-      <h2>Des tarifs <span>simples et honnêtes</span></h2>
+      <h2>
+        {t('pricing.title')}
+      </h2>
       <p className="pricing-sub">
-        Paiement via Wave, Orange Money, Free Money ou carte bancaire.
+        {t('pricing.subtitle')}
       </p>
 
       <div className="pricing-grid">
-        {PLANS.map(p => {
+        {plans.map((p) => {
           const isCurrent = currentPlan === p.key;
           return (
             <div
               key={p.key}
               className={`pricing-card ${isCurrent ? 'active' : ''} ${p.popular ? 'popular' : ''}`}
             >
-              {p.popular && <div className="popular-badge">Recommandé</div>}
+              {p.popular && <div className="popular-badge">{t('pricing.recommended')}</div>}
 
               <div className="pricing-card-head">
                 <h3>{p.name}</h3>
                 <div className="price">
                   <span className="price-usd">{p.priceUSD}</span>
                   <span className="price-fcfa">
-                    {p.priceFCFA.toLocaleString('fr-SN')} FCFA / mois
+                    {p.priceFCFA.toLocaleString('fr-SN')} {t('pricing.perMonth')}
                   </span>
                 </div>
               </div>
@@ -62,10 +91,10 @@ export default function PricingSection({ currentPlan, onSelect }) {
                 disabled={isCurrent}
               >
                 {isCurrent ? (
-                  'Plan actuel'
+                  t('pricing.currentPlan')
                 ) : (
                   <>
-                    Choisir ce plan
+                    {t('pricing.choose')} {p.name}
                     <ArrowRight size={16} strokeWidth={2.5} />
                   </>
                 )}

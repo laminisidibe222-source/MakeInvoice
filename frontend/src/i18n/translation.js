@@ -61,9 +61,8 @@ export const translations = {
 
     // ─── Tarifs ───
     pricing: {
-      title: 'Des prix simples. Aucune surprise.',
-      subtitle: 'Payez par Wave, Orange Money, Mixx by Yas ou carte. Annulable à tout moment.',
-      perMonth: 'FCFA / mois',
+     
+      subtitle: 'Paiement via Wave, Orange Money, Mixx by Yas ou carte bancaire.',      perMonth: 'FCFA / mois',
       choose: 'Choisir',
       recommended: 'Recommandé',
       starter: 'Starter',
@@ -81,6 +80,9 @@ export const translations = {
       featApi: 'API & intégrations',
       featDedicated: 'Support dédié',
       featMulti: 'Multi-utilisateurs',
+      currentPlan: 'Plan actuel',
+      titleLine1: 'Des tarifs',
+      titleLine2: 'simples et honnêtes',
     },
 
     // ─── CTA final ───
@@ -345,8 +347,8 @@ export const translations = {
 
     // ─── Pricing ───
     pricing: {
-      title: 'Simple pricing. No surprises.',
-      subtitle: 'Pay via mobile money or card. Cancel anytime.',
+      
+      subtitle: 'Pay via Wave, Orange Money, Mixx by Yas, or card.',
       perMonth: 'FCFA / month',
       choose: 'Choose',
       recommended: 'Recommended',
@@ -365,6 +367,9 @@ export const translations = {
       featApi: 'API & integrations',
       featDedicated: 'Dedicated support',
       featMulti: 'Multi-user',
+      currentPlan: 'Current plan',
+      titleLine1: 'Simple pricing.',
+      titleLine2: 'No surprises.',
     },
 
     // ─── Final CTA ───
