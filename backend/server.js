@@ -11,6 +11,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:5173',
+    'https://makeinvoice-sn.vercel.app',
     'https://make-invoice-rho.vercel.app',
     'https://make-invoice-rho-*.vercel.app', // preview deployments
   ],
