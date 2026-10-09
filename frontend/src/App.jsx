@@ -2,20 +2,24 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
+import { formatMoney } from './utils/currencies';
+import { useLang } from './i18n/LanguageContext';
 import Auth from './components/Auth';
 import InvoiceForm from './components/InvoiceForm';
 import InvoicePreview from './components/InvoicePreview';
 import PricingSection from './components/PricingSection';
 import PaymentModal from './components/PaymentModal';
-import { Zap, LogOut, Save, XCircle, Printer } from 'lucide-react';
 import Logo from './components/Logo';
 import LandingPage from './components/LandingPage';
-import { BarChart3, TrendingUp } from 'lucide-react';
 import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashbord';
+import Dashboard from './components/Dashboard';
 import History from './components/History';
-import { FileCheck2, Sparkles, CheckCircle2, Lock , ArrowUpRight, Moon, Sun , Menu } from 'lucide-react';
-import './App.css'
+import LanguageSwitcher from './components/LanguageSwitcher';
+import {
+  Zap, LogOut, Save, XCircle, Printer, BarChart3, TrendingUp,
+  FileCheck2, Sparkles, CheckCircle2, Lock, ArrowUpRight, Moon, Sun, Menu,
+} from 'lucide-react';
+import './App.css';
 import { useLang } from './i18n/LanguageContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
 const DEFAULT_INVOICE = {
