@@ -22,6 +22,7 @@ import {
 import './App.css';
 import { useLang } from './i18n/LanguageContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import { formatMoney } from './utils/currencies';
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },
