@@ -14,7 +14,7 @@ import { BarChart3, TrendingUp } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashbord';
 import History from './components/History';
-import { FileCheck2, Sparkles, CheckCircle2, ArrowRight, Moon, Sun , Menu } from 'lucide-react';
+import { FileCheck2, Sparkles, CheckCircle2, Lock , ArrowUpRight, Moon, Sun , Menu } from 'lucide-react';
 import './App.css'
 import { useLang } from './i18n/LanguageContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
@@ -303,16 +303,25 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     <main className="mi-workspace">
       {/* ... */}
       <div className="mi-action-bar">
-        <button className="btn btn-generate" onClick={handleSave} disabled={saving || !canGenerate}>
+        <button
+          className="btn btn-generate"
+          onClick={handleSave}
+          disabled={saving || !canGenerate}
+        >
           {saving ? (
             <>
               <span className="spinner-mini" />
               {t('form.saving')}
             </>
-          ) : (
+          ) : canGenerate ? (
             <>
               <FileCheck2 size={18} strokeWidth={2.4} />
-              {canGenerate ? t('form.saveInvoice') : t('form.quotaReached')}
+              {t('form.saveInvoice')}
+            </>
+          ) : (
+            <>
+              <Lock size={16} strokeWidth={2.4} />
+              {t('form.quotaReached')}
             </>
           )}
         </button>
@@ -324,7 +333,7 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
               document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
             }}
           >
-            <Sparkles size={16} />
+            <ArrowUpRight size={16} strokeWidth={2.5} />
             {t('form.viewPlans')}
           </button>
         )}

@@ -5,6 +5,7 @@ import {
 import { supabase } from '../supabase';
 import Logo from './Logo';
 import LanguageSwitcher from './LanguageSwitcher';
+import GoogleLogo from './GoogleLogo';
 import { useLang } from '../i18n/LanguageContext';
 
 export default function Auth({ onAuth }) {
@@ -47,8 +48,21 @@ export default function Auth({ onAuth }) {
     }
   };
 
-  const handleSocial = (provider) => {
-    setError(`Coming soon: ${provider}`);
+  const handleGoogle = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+      if (error) throw error;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -148,15 +162,17 @@ export default function Auth({ onAuth }) {
             <span>{t('auth.orContinueWith')}</span>
           </div>
 
-          <div className="auth2-socials">
-            <button type="button" className="auth2-social" onClick={() => handleSocial('Bépo')}>Bé</button>
-            <button type="button" className="auth2-social" onClick={() => handleSocial('Google')}>
-              <span className="auth2-social-g">G</span>
-            </button>
-            <button type="button" className="auth2-social" onClick={() => handleSocial('Facebook')}>
-              <span className="auth2-social-f">f</span>
-            </button>
-          </div>
+          {/* Google only */}
+          <button
+            type="button"
+            className="auth2-google"
+            onClick={handleGoogle}
+            disabled={loading}
+            aria-label="Continue with Google"
+          >
+            <GoogleLogo size={18} />
+            <span>Google</span>
+          </button>
 
           <p className="auth2-toggle">
             {mode === 'login' ? t('auth.noAccount') : t('auth.haveAccount')}{' '}
