@@ -24,67 +24,6 @@ app.use(express.json());
 // ============================================
 // GET /api/pay/verify/:token — fallback si le webhook a échoué
 // ============================================
-app.get('/api/pay/verify/:token', async (req, res) => {
-  try {
-    const { token } = req.params;
-    console.log('Verify payment:', token);
-
-    // Vérifie auprès de PayDunya
-    const verifyResponse = await fetch(
-      `${PAYDUNYA_BASE}/checkout-invoice/confirm/${token}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'PAYDUNYA-MASTER-KEY': process.env.PAYDUNYA_MASTER_KEY,
-          'PAYDUNYA-PRIVATE-KEY': process.env.PAYDUNYA_PRIVATE_KEY,
-          'PAYDUNYA-TOKEN': process.env.PAYDUNYA_TOKEN,
-        },
-      }
-    );
-
-    const verifyData = await verifyResponse.json();
-    console.log('Verify result:', verifyData);
-
-    if (verifyData.status !== 'completed') {
-      return res.json({ status: verifyData.status });
-    }
-
-    const customData = verifyData.custom_data || {};
-    const { user_id, plan } = customData;
-
-    if (!user_id || !plan) {
-      return res.status(400).json({ error: 'Missing metadata' });
-    }
-
-    // Idempotence : on ne fait rien si déjà payé
-    const { data: existing } = await supabase
-      .from('payments')
-      .select('status')
-      .eq('provider_token', token)
-      .single();
-
-    if (existing?.status === 'completed') {
-      return res.json({ status: 'completed', plan, already: true });
-    }
-
-    // Upgrade
-    await supabase.rpc('upgrade_plan', {
-      p_user_id: user_id,
-      p_plan: plan,
-    });
-
-    await supabase
-      .from('payments')
-      .update({ status: 'completed', updated_at: new Date().toISOString() })
-      .eq('provider_token', token);
-
-    console.log(`✅ Fallback upgrade: ${user_id} → ${plan}`);
-    res.json({ status: 'completed', plan });
-  } catch (err) {
-    console.error('Verify error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 // Supabase admin client (service role — full access, backend only)
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -298,6 +237,68 @@ app.post('/api/paydunya/webhook', async (req, res) => {
     res.status(500).send('Webhook error');
   }
 });
+app.get('/api/pay/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    console.log('Verify payment:', token);
+
+    // Vérifie auprès de PayDunya
+    const verifyResponse = await fetch(
+      `${PAYDUNYA_BASE}/checkout-invoice/confirm/${token}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'PAYDUNYA-MASTER-KEY': process.env.PAYDUNYA_MASTER_KEY,
+          'PAYDUNYA-PRIVATE-KEY': process.env.PAYDUNYA_PRIVATE_KEY,
+          'PAYDUNYA-TOKEN': process.env.PAYDUNYA_TOKEN,
+        },
+      }
+    );
+
+    const verifyData = await verifyResponse.json();
+    console.log('Verify result:', verifyData);
+
+    if (verifyData.status !== 'completed') {
+      return res.json({ status: verifyData.status });
+    }
+
+    const customData = verifyData.custom_data || {};
+    const { user_id, plan } = customData;
+
+    if (!user_id || !plan) {
+      return res.status(400).json({ error: 'Missing metadata' });
+    }
+
+    // Idempotence : on ne fait rien si déjà payé
+    const { data: existing } = await supabase
+      .from('payments')
+      .select('status')
+      .eq('provider_token', token)
+      .single();
+
+    if (existing?.status === 'completed') {
+      return res.json({ status: 'completed', plan, already: true });
+    }
+
+    // Upgrade
+    await supabase.rpc('upgrade_plan', {
+      p_user_id: user_id,
+      p_plan: plan,
+    });
+
+    await supabase
+      .from('payments')
+      .update({ status: 'completed', updated_at: new Date().toISOString() })
+      .eq('provider_token', token);
+
+    console.log(`✅ Fallback upgrade: ${user_id} → ${plan}`);
+    res.json({ status: 'completed', plan });
+  } catch (err) {
+    console.error('Verify error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 // ============================================
 // POST /api/invoices — create invoice (server-side quota check)
