@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
@@ -20,9 +19,7 @@ import {
   FileCheck2, Sparkles, CheckCircle2, Lock, ArrowUpRight, Moon, Sun, Menu,
 } from 'lucide-react';
 import './App.css';
-import { useLang } from './i18n/LanguageContext';
-import LanguageSwitcher from './components/LanguageSwitcher';
-import { formatMoney } from './utils/currencies';
+
 const DEFAULT_INVOICE = {
   company: { name: '', address: '', email: '', phone: '' },
   client: { name: '', address: '', email: '', phone: '' },

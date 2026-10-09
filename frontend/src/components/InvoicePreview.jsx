@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { Printer, ArrowDown, Loader2 } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 import { formatMoney } from '../utils/currencies';
-const formatFCFA = (n) =>
-  isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
 export default function InvoicePreview({ invoice }) {
   const { t } = useLang();
   const [downloading, setDownloading] = useState(false);
+  const currency = invoice.currency || 'XOF';
 
-  const subtotal = invoice.items.reduce((s, i) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
+  const subtotal = invoice.items.reduce(
+    (s, i) => s + (i.quantity || 0) * (i.unitPrice || 0),
+    0
+  );
   const taxAmount = subtotal * ((invoice.taxRate || 0) / 100);
   const discountAmount = subtotal * ((invoice.discount || 0) / 100);
   const total = subtotal + taxAmount - discountAmount;
@@ -20,10 +22,11 @@ export default function InvoicePreview({ invoice }) {
       const html2pdf = (await import('html2pdf.js')).default;
       const element = document.getElementById('invoice-paper');
       if (!element) throw new Error('Preview not found');
+
       await html2pdf()
         .set({
           margin: 0,
-          filename: `invoice-${invoice.number || 'draft'}.pdf`,
+          filename: `facture-${invoice.number || 'brouillon'}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -32,7 +35,7 @@ export default function InvoicePreview({ invoice }) {
         .save();
     } catch (err) {
       console.error('PDF error:', err);
-      alert('Unable to generate PDF. Try printing instead.');
+      alert('Impossible de générer le PDF. Essayez l\'impression.');
     } finally {
       setDownloading(false);
     }
@@ -46,7 +49,11 @@ export default function InvoicePreview({ invoice }) {
           <button className="btn btn-print" onClick={() => window.print()}>
             <Printer size={15} /> {t('preview.print')}
           </button>
-          <button className="btn btn-download" onClick={handleDownload} disabled={downloading}>
+          <button
+            className="btn btn-download"
+            onClick={handleDownload}
+            disabled={downloading}
+          >
             {downloading ? (
               <>
                 <Loader2 size={15} className="spin" /> {t('preview.generating')}
@@ -99,8 +106,8 @@ export default function InvoicePreview({ invoice }) {
                 <tr key={i}>
                   <td>{item.description || '—'}</td>
                   <td>{item.quantity}</td>
-                  <td>{formatFCFA(item.unitPrice)}</td>
-                  <td>{formatFCFA((item.quantity || 0) * (item.unitPrice || 0))}</td>
+                  <td>{formatMoney(item.unitPrice, currency)}</td>
+                  <td>{formatMoney((item.quantity || 0) * (item.unitPrice || 0), currency)}</td>
                 </tr>
               ))}
             </tbody>
@@ -109,21 +116,21 @@ export default function InvoicePreview({ invoice }) {
           <div className="invoice-totals">
             <div className="totals-row">
               <span>{t('preview.subtotal')}</span>
-              <span>{formatFCFA(subtotal)}</span>
+              <span>{formatMoney(subtotal, currency)}</span>
             </div>
             <div className="totals-row">
               <span>{t('preview.vat')} ({invoice.taxRate}%)</span>
-              <span>{formatFCFA(taxAmount)}</span>
+              <span>{formatMoney(taxAmount, currency)}</span>
             </div>
             {invoice.discount > 0 && (
               <div className="totals-row discount">
                 <span>{t('preview.discount')} ({invoice.discount}%)</span>
-                <span>-{formatFCFA(discountAmount)}</span>
+                <span>-{formatMoney(discountAmount, currency)}</span>
               </div>
             )}
             <div className="totals-row grand-total">
               <span>{t('preview.grandTotal')}</span>
-              <span>{formatFCFA(total)}</span>
+              <span>{formatMoney(total, currency)}</span>
             </div>
           </div>
 
