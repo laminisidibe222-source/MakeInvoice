@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { FileText, Search, Calendar, Download, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../i18n/LanguageContext';
-import { FileText, Search, Calendar, Download, Loader2 } from 'lucide-react';
+import { formatMoney } from '../utils/currencies';
 import { downloadInvoicePdf } from '../utils/invoicePdf';
 
 export default function History() {
@@ -10,21 +11,6 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [downloadingId, setDownloadingId] = useState(null);
-
-      const handleDownload = async (inv) => {
-      setDownloadingId(inv.id);
-      try {
-        await downloadInvoicePdf({
-          ...inv,
-          company_name: inv.company_name || 'Votre entreprise',
-        });
-      } catch (err) {
-        console.error('PDF error:', err);
-        alert('Impossible de générer le PDF.');
-      } finally {
-        setDownloadingId(null);
-      }
-    };
 
   useEffect(() => {
     (async () => {
@@ -40,9 +26,6 @@ export default function History() {
     })();
   }, []);
 
-  const formatFCFA = (n) =>
-    isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
-
   const filtered = invoices.filter((inv) => {
     const q = query.toLowerCase();
     return (
@@ -53,6 +36,18 @@ export default function History() {
 
   const countLabel =
     filtered.length === 1 ? t('history.count') : t('history.countPlural');
+
+  const handleDownload = async (inv) => {
+    setDownloadingId(inv.id);
+    try {
+      await downloadInvoicePdf(inv);
+    } catch (err) {
+      console.error('PDF error:', err);
+      alert('Impossible de générer le PDF.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   return (
     <main className="mi-workspace">
@@ -117,9 +112,9 @@ export default function History() {
                     <Download size={14} />
                   )}
                 </button>
+              </div>
+            ))}
           </div>
-          ))}
-        </div>
         )}
       </div>
     </main>
