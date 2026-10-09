@@ -86,12 +86,14 @@ export default function PricingSection({ currentPlan, onSelect }) {
 
               <button
                 type="button"
-                className="btn-plan"
+                className={`btn-plan ${isCurrent ? 'btn-plan--renew' : ''}`}
                 onClick={() => onSelect(p.key)}
-                disabled={isCurrent}
               >
                 {isCurrent ? (
-                  t('pricing.currentPlan')
+                  <>
+                    {t('pricing.renew')}
+                    <ArrowRight size={16} strokeWidth={2.5} />
+                  </>
                 ) : (
                   <>
                     {t('pricing.choose')} {p.name}

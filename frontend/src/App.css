@@ -4074,3 +4074,61 @@ html {
   margin-bottom: 22px;
 }
 .auth2-top-row .auth2-logo { margin-bottom: 0; }
+
+.btn-plan--renew {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  color: white !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.28) !important;
+}
+.btn-plan--renew:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.38) !important;
+}
+
+/* Table historique avec bouton download */
+.mi-table--history .mi-table-head,
+.mi-table--history .mi-table-row {
+  grid-template-columns: 1.3fr 1.3fr 0.9fr 0.9fr 40px;
+}
+
+.mi-download-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #F2F4F7;
+  color: #475467;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.mi-download-btn:hover:not(:disabled) {
+  background: #EEF2FF;
+  color: #6366F1;
+}
+.mi-download-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .mi-download-btn {
+  background: #1F2937;
+  color: #9CA3AF;
+}
+[data-theme="dark"] .mi-download-btn:hover:not(:disabled) {
+  background: #312E81;
+  color: #A5B4FC;
+}
+
+@media (max-width: 700px) {
+  .mi-table--history .mi-table-head { display: none; }
+  .mi-table--history .mi-table-row {
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+  }
+  .mi-table--history .mi-table-client { grid-column: 1 / -1; font-size: 12.5px; color: #64748B; }
+  .mi-table--history .mi-table-date { display: none; }
+}

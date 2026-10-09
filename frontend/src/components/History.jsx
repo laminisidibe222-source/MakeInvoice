@@ -2,12 +2,30 @@ import { useEffect, useState } from 'react';
 import { FileText, Search, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../i18n/LanguageContext';
+import { FileText, Search, Calendar, Download, Loader2 } from 'lucide-react';
+import { downloadInvoicePdf } from '../utils/invoicePdf';
 
 export default function History() {
   const { t } = useLang();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
+  const [downloadingId, setDownloadingId] = useState(null);
+
+      const handleDownload = async (inv) => {
+      setDownloadingId(inv.id);
+      try {
+        await downloadInvoicePdf({
+          ...inv,
+          company_name: inv.company_name || 'Votre entreprise',
+        });
+      } catch (err) {
+        console.error('PDF error:', err);
+        alert('Impossible de générer le PDF.');
+      } finally {
+        setDownloadingId(null);
+      }
+    };
 
   useEffect(() => {
     (async () => {
@@ -68,12 +86,13 @@ export default function History() {
             <p>{query ? t('history.noResults') : t('history.noInvoices')}</p>
           </div>
         ) : (
-          <div className="mi-table">
+          <div className="mi-table mi-table--history">
             <div className="mi-table-head">
               <span>{t('history.tableNum')}</span>
               <span>{t('history.tableClient')}</span>
               <span>{t('history.tableDate')}</span>
               <span className="mi-table-right">{t('history.tableTotal')}</span>
+              <span></span>
             </div>
             {filtered.map((inv) => (
               <div className="mi-table-row" key={inv.id}>
@@ -84,10 +103,24 @@ export default function History() {
                 <span className="mi-table-date">
                   <Calendar size={13} /> {inv.issue_date || '—'}
                 </span>
-                <span className="mi-table-total">{formatFCFA(inv.total)}</span>
-              </div>
-            ))}
+                <span className="mi-table-total">
+                  {formatMoney(inv.total, inv.currency)}
+                </span>
+                <button
+                  className="mi-download-btn"
+                  onClick={() => handleDownload(inv)}
+                  disabled={downloadingId === inv.id}
+                  title="Télécharger le PDF"
+                >
+                  {downloadingId === inv.id ? (
+                    <Loader2 size={14} className="spin" />
+                  ) : (
+                    <Download size={14} />
+                  )}
+                </button>
           </div>
+          ))}
+        </div>
         )}
       </div>
     </main>

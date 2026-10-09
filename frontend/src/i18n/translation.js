@@ -83,6 +83,7 @@ export const translations = {
       currentPlan: 'Plan actuel',
       titleLine1: 'Des tarifs',
       titleLine2: 'simples et honnêtes',
+      renew: 'Renouveler ce plan',
     },
 
     // ─── CTA final ───
@@ -370,6 +371,8 @@ export const translations = {
       currentPlan: 'Current plan',
       titleLine1: 'Simple pricing.',
       titleLine2: 'No surprises.',
+      renew: 'Renew this plan',
+      
     },
 
     // ─── Final CTA ───
