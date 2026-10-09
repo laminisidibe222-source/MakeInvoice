@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FileText, Plus, ArrowRight, TrendingUp, Calendar } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../i18n/LanguageContext';
-
+import { formatMoney } from '../utils/currencies';
 export default function Dashboard({ profile }) {
   const { t } = useLang();
   const [invoices, setInvoices] = useState([]);

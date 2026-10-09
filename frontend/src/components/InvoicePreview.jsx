@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Printer, Download, Loader2 } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
-
+import { formatMoney } from '../utils/currencies';
 const formatFCFA = (n) =>
   isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
