@@ -4040,9 +4040,33 @@ html {
   align-items: center;
   gap: 10px;
 }
+
+/* Le FR/EN reste visible sur mobile, juste plus petit */
 @media (max-width: 900px) {
-  .jl-nav-right .lang-switcher { display: none; }
+  .jl-nav .lang-switcher {
+    display: inline-flex;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
 }
+
+@media (max-width: 520px) {
+  .jl-nav {
+    padding: 14px 5%;
+  }
+  .jl-nav-cta {
+    padding: 9px 16px;
+    font-size: 12px;
+  }
+  .jl-nav .lang-switcher {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+  .jl-nav-right {
+    gap: 6px;
+  }
+}
+
 .auth2-top-row {
   display: flex;
   justify-content: space-between;
