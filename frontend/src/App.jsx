@@ -299,71 +299,165 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
   return (
-    
-    <main className="mi-workspace">
-      {/* ... */}
-      <div className="mi-action-bar">
-        <button
-          className="btn btn-generate"
-          onClick={handleSave}
-          disabled={saving || !canGenerate}
-        >
-          {saving ? (
-            <>
-              <span className="spinner-mini" />
-              {t('form.saving')}
-            </>
-          ) : canGenerate ? (
-            <>
-              <FileCheck2 size={18} strokeWidth={2.4} />
-              {t('form.saveInvoice')}
-            </>
-          ) : (
-            <>
-              <Lock size={16} strokeWidth={2.4} />
-              {t('form.quotaReached')}
-            </>
-          )}
-        </button>
+  <main className="mi-workspace">
+    <div className="mi-page-head">
+      <h1 className="mi-page-title">{t('form.title')}</h1>
+      <p className="mi-page-sub">{t('form.subtitle')}</p>
+    </div>
 
-        {!canGenerate && (
-          <button
-            className="btn btn-upgrade"
-            onClick={() => {
-              document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            <ArrowUpRight size={16} strokeWidth={2.5} />
-            {t('form.viewPlans')}
-          </button>
-        )}
+    <div className="mi-grid">
+      <div className="mi-col mi-col--form">
+        <InvoiceForm invoice={invoice} setInvoice={setInvoice} />
       </div>
 
-      <PricingSection currentPlan={profile?.plan} onSelect={onUpgrade} />
-    </main>
-  );
+      <div className="mi-col mi-col--preview">
+        <div className="mi-dark-card">
+          <div className="mi-dark-card-head">
+            <span className="mi-dark-label">Total de la facture</span>
+            <span className="mi-dark-icon">
+              <TrendingUp size={16} />
+            </span>
+          </div>
+          <div className="mi-dark-value">
+            {formatMoney(total, invoice.currency || 'XOF')}
+          </div>
+          <div className="mi-dark-sub">Mis à jour en direct</div>
+        </div>
+
+        <div className="mi-dark-card">
+          <div className="mi-dark-card-head">
+            <span className="mi-dark-label">Quota ce mois</span>
+            <span className="mi-dark-icon">
+              <BarChart3 size={16} />
+            </span>
+          </div>
+          <div className="mi-dark-value mi-dark-value--big">
+            {profile?.invoices_generated ?? 0}
+            <span className="mi-dark-total">/{profile?.invoices_limit ?? 10}</span>
+          </div>
+          <div className="mi-quota-track">
+            <div className="mi-quota-track-fill" style={{ width: `${quotaPercent}%` }} />
+          </div>
+        </div>
+
+        <InvoicePreview invoice={invoice} />
+      </div>
+    </div>
+
+    <div className="mi-action-bar">
+      <button
+        className="btn btn-generate"
+        onClick={handleSave}
+        disabled={saving || !canGenerate}
+      >
+        {saving ? (
+          <>
+            <span className="spinner-mini" />
+            Enregistrement...
+          </>
+        ) : canGenerate ? (
+          <>
+            <FileCheck2 size={18} strokeWidth={2.4} />
+            Enregistrer la facture
+          </>
+        ) : (
+          <>
+            <Lock size={16} strokeWidth={2.4} />
+            Quota atteint
+          </>
+        )}
+      </button>
+
+      {!canGenerate && (
+        <button
+          className="btn btn-upgrade"
+          onClick={() => {
+            document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <ArrowUpRight size={16} strokeWidth={2.5} />
+          Voir les plans
+        </button>
+      )}
+    </div>
+
+    <PricingSection currentPlan={profile?.plan} onSelect={onUpgrade} />
+  </main>
+);
 }
 
 function PaymentSuccess({ onDone }) {
+  const { t } = useLang();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('checking');
 
-  const {t} = useLang();
   useEffect(() => {
-    const t = setTimeout(onDone, 3000);
-    return () => clearTimeout(t);
+    const verify = async () => {
+      // Récupère le token de l'URL (PayDunya le met dans ?token=xxx)
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      if (!token) {
+        setStatus('no-token');
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/pay/verify/${token}`
+        );
+        const data = await res.json();
+
+        if (data.status === 'completed') {
+          setStatus('success');
+          // Refresh le profil pour voir le nouveau plan
+          setTimeout(() => onDone(), 2000);
+        } else {
+          setStatus('pending');
+        }
+      } catch (err) {
+        console.error('Verify failed:', err);
+        setStatus('error');
+      }
+    };
+
+    verify();
   }, []);
+
   return (
     <div className="payment-page">
       <div className="payment-success">
         <div className="checkmark">
           <CheckCircle2 size={44} strokeWidth={2.5} />
         </div>
-        <h3>{t('payment.successTitle')}</h3>
-        <p>{t('payment.successDesc')}</p>
+        {status === 'checking' && (
+          <>
+            <h3>Vérification du paiement...</h3>
+            <p>Merci de patienter quelques secondes.</p>
+          </>
+        )}
+        {status === 'success' && (
+          <>
+            <h3>{t('payment.successTitle')}</h3>
+            <p>{t('payment.successDesc')}</p>
+          </>
+        )}
+        {status === 'pending' && (
+          <>
+            <h3>Paiement en attente</h3>
+            <p>Votre paiement est en cours de validation. Nous vous enverrons un email.</p>
+          </>
+        )}
+        {status === 'error' && (
+          <>
+            <h3>Erreur de vérification</h3>
+            <p>Contactez le support si votre paiement a été débité.</p>
+          </>
+        )}
       </div>
     </div>
   );
 }
-
 function PaymentCancel({ onDone }) {
 
   const {t} = useLang();
