@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Search, Calendar, Download, Loader2 } from 'lucide-react';
+import { FileText, Search, Calendar, ArrowDown, Loader2 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { useLang } from '../i18n/LanguageContext';
 import { formatMoney } from '../utils/currencies';
@@ -109,7 +109,7 @@ export default function History() {
                   {downloadingId === inv.id ? (
                     <Loader2 size={14} className="spin" />
                   ) : (
-                    <Download size={14} />
+                    <ArrowDown size={14} />
                   )}
                 </button>
               </div>

@@ -61,7 +61,7 @@ export const translations = {
 
     // ─── Tarifs ───
     pricing: {
-     
+      title: 'Des tarifs simples et honnêtes',
       subtitle: 'Paiement via Wave, Orange Money, Mixx by Yas ou carte bancaire.',      perMonth: 'FCFA / mois',
       choose: 'Choisir',
       recommended: 'Recommandé',
@@ -348,7 +348,7 @@ export const translations = {
 
     // ─── Pricing ───
     pricing: {
-      
+      title: 'Simple pricing. No surprises.',
       subtitle: 'Pay via Wave, Orange Money, Mixx by Yas, or card.',
       perMonth: 'FCFA / month',
       choose: 'Choose',

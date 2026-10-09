@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Printer, Download, Loader2 } from 'lucide-react';
+import { Printer, ArrowDown, Loader2 } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 import { formatMoney } from '../utils/currencies';
 const formatFCFA = (n) =>
@@ -53,7 +53,7 @@ export default function InvoicePreview({ invoice }) {
               </>
             ) : (
               <>
-                <Download size={15} /> {t('preview.download')}
+                <ArrowDown size={15} /> {t('preview.download')}
               </>
             )}
           </button>

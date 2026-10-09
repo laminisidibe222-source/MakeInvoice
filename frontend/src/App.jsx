@@ -392,17 +392,16 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
 
 function PaymentSuccess({ onDone }) {
   const { t } = useLang();
-  const navigate = useNavigate();
   const [status, setStatus] = useState('checking');
 
   useEffect(() => {
     const verify = async () => {
-      // Récupère le token de l'URL (PayDunya le met dans ?token=xxx)
       const params = new URLSearchParams(window.location.search);
       const token = params.get('token');
 
       if (!token) {
         setStatus('no-token');
+        setTimeout(() => onDone(), 2000);
         return;
       }
 
@@ -411,11 +410,11 @@ function PaymentSuccess({ onDone }) {
           `${import.meta.env.VITE_API_URL}/api/pay/verify/${token}`
         );
         const data = await res.json();
+        console.log('Verify response:', data);
 
         if (data.status === 'completed') {
           setStatus('success');
-          // Refresh le profil pour voir le nouveau plan
-          setTimeout(() => onDone(), 2000);
+          setTimeout(() => onDone(), 2500);
         } else {
           setStatus('pending');
         }
@@ -434,6 +433,7 @@ function PaymentSuccess({ onDone }) {
         <div className="checkmark">
           <CheckCircle2 size={44} strokeWidth={2.5} />
         </div>
+
         {status === 'checking' && (
           <>
             <h3>Vérification du paiement...</h3>
@@ -449,13 +449,19 @@ function PaymentSuccess({ onDone }) {
         {status === 'pending' && (
           <>
             <h3>Paiement en attente</h3>
-            <p>Votre paiement est en cours de validation. Nous vous enverrons un email.</p>
+            <p>Votre paiement est en cours de validation.</p>
+          </>
+        )}
+        {status === 'no-token' && (
+          <>
+            <h3>{t('payment.successTitle')}</h3>
+            <p>{t('payment.successDesc')}</p>
           </>
         )}
         {status === 'error' && (
           <>
             <h3>Erreur de vérification</h3>
-            <p>Contactez le support si votre paiement a été débité.</p>
+            <p>Si vous avez été débité, contactez le support.</p>
           </>
         )}
       </div>
