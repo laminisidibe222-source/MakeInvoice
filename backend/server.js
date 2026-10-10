@@ -301,6 +301,177 @@ app.get('/api/pay/verify/:token', async (req, res) => {
 
 
 // ============================================
+// Lemon Squeezy — Create checkout
+// ============================================
+const LEMON_VARIANTS = {
+  starter: process.env.LEMON_VARIANT_STARTER,
+  pro: process.env.LEMON_VARIANT_PRO,
+  business: process.env.LEMON_VARIANT_BUSINESS,
+};
+
+app.post('/api/lemonsqueezy/checkout', requireAuth, async (req, res) => {
+  try {
+    const { plan } = req.body;
+    const variantId = LEMON_VARIANTS[plan];
+
+    if (!variantId) {
+      return res.status(400).json({ error: 'Plan invalide' });
+    }
+
+    const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/vnd.api+json',
+        'Authorization': `Bearer ${process.env.LEMON_API_KEY}`,
+      },
+      body: JSON.stringify({
+        data: {
+          type: 'checkouts',
+          attributes: {
+            checkout_data: {
+              email: req.user.email,
+              custom: {
+                user_id: req.user.id,
+                plan,
+              },
+            },
+            product_options: {
+              redirect_url: `${process.env.FRONTEND_URL}/payment/success`,
+              receipt_button_text: 'Retour à MakeInvoice',
+              receipt_link_url: `${process.env.FRONTEND_URL}/`,
+              receipt_thank_you_note: 'Merci pour votre abonnement à MakeInvoice !',
+            },
+            checkout_options: {
+              button_color: '#6366F1',
+              button_text_color: '#FFFFFF',
+            },
+          },
+          relationships: {
+            store: {
+              data: { type: 'stores', id: process.env.LEMON_STORE_ID },
+            },
+            variant: {
+              data: { type: 'variants', id: variantId },
+            },
+          },
+        },
+      }),
+    });
+
+    const data = await response.json();
+    console.log('Lemon checkout response:', data);
+
+    if (!data.data || !data.data.attributes || !data.data.attributes.url) {
+      return res.status(500).json({
+        error: 'Erreur création checkout',
+        details: data,
+      });
+    }
+
+    // Log du paiement en attente
+    await supabase.from('payments').insert({
+      user_id: req.user.id,
+      plan,
+      amount: plan === 'starter' ? 4500 : plan === 'pro' ? 7500 : 12000,
+      provider: 'lemonsqueezy',
+      provider_token: data.data.id,
+      status: 'pending',
+      metadata: { checkout_url: data.data.attributes.url },
+    });
+
+    res.json({
+      checkout_url: data.data.attributes.url,
+      checkout_id: data.data.id,
+    });
+  } catch (err) {
+    console.error('Lemon checkout error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// Lemon Squeezy — Webhook
+// ============================================
+app.post(
+  '/api/lemonsqueezy/webhook',
+  express.json({ type: 'application/json' }),
+  async (req, res) => {
+    try {
+      // Vérification signature
+      const crypto = await import('crypto');
+      const secret = process.env.LEMON_WEBHOOK_SECRET;
+      const signature = req.headers['x-signature'];
+
+      if (!signature) {
+        return res.status(401).send('Missing signature');
+      }
+
+      const hmac = crypto.createHmac('sha256', secret);
+      const digest = Buffer.from(
+        hmac.update(JSON.stringify(req.body)).digest('hex'),
+        'utf8'
+      );
+      const signatureBuffer = Buffer.from(signature, 'utf8');
+
+      if (
+        digest.length !== signatureBuffer.length ||
+        !crypto.timingSafeEqual(digest, signatureBuffer)
+      ) {
+        console.error('Invalid webhook signature');
+        return res.status(401).send('Invalid signature');
+      }
+
+      const eventName = req.body.meta?.event_name;
+      const customData = req.body.meta?.custom_data || {};
+      const { user_id, plan } = customData;
+
+      console.log('LS Webhook:', eventName, { user_id, plan });
+
+      // Événements qui activent le plan
+      if (
+        eventName === 'subscription_created' ||
+        eventName === 'order_created'
+      ) {
+        if (!user_id || !plan) {
+          console.error('Missing user_id or plan');
+          return res.status(400).send('Missing metadata');
+        }
+
+        // Upgrade du plan
+        const { error: rpcError } = await supabase.rpc('upgrade_plan', {
+          p_user_id: user_id,
+          p_plan: plan,
+        });
+
+        if (rpcError) {
+          console.error('Upgrade error:', rpcError);
+          return res.status(500).send('Upgrade failed');
+        }
+
+        // Marquer le paiement comme complété
+        await supabase
+          .from('payments')
+          .update({
+            status: 'completed',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user_id)
+          .eq('status', 'pending');
+
+        console.log(`✅ User ${user_id} upgraded to ${plan}`);
+      }
+
+      res.status(200).send('OK');
+    } catch (err) {
+      console.error('Webhook error:', err);
+      res.status(500).send('Webhook error');
+    }
+  }
+);
+
+
+// ============================================
 // POST /api/invoices — create invoice (server-side quota check)
 // ============================================
 app.post('/api/invoices', requireAuth, async (req, res) => {

@@ -4132,3 +4132,57 @@ html {
   .mi-table--history .mi-table-client { grid-column: 1 / -1; font-size: 12.5px; color: #64748B; }
   .mi-table--history .mi-table-date { display: none; }
 }
+
+.pm-features-list {
+  list-style: none;
+  padding: 0 32px;
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pm-features-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #475467;
+  font-weight: 500;
+}
+.pm-feature-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #D1FAE5;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pm-payment-info {
+  margin: 0 32px 20px;
+  padding: 16px 18px;
+  background: #F8F9FD;
+  border-radius: 12px;
+  border-left: 3px solid #6366F1;
+}
+.pm-info-text {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+.pm-info-methods {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .pm-features-list { padding: 0 20px; }
+  .pm-payment-info { margin: 0 20px 16px; padding: 14px; }
+}
