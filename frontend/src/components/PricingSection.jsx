@@ -20,7 +20,7 @@ export default function PricingSection({ currentPlan, onSelect }) {
     {
       key: 'pro',
       name: t('pricing.pro'),
-      priceUSD: 12,
+      priceUSD: 11.15,
       priceFCFA: 6500,
       features: [
         t('pricing.feat30'),
@@ -33,7 +33,7 @@ export default function PricingSection({ currentPlan, onSelect }) {
     {
       key: 'business',
       name: t('pricing.business'),
-      priceUSD: 20,
+      priceUSD: 17.15,
       priceFCFA: 10000,
       features: [
         t('pricing.feat100'),
