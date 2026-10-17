@@ -216,16 +216,16 @@ function Pricing({ onGetStarted }) {
   const { t } = useLang();
   const plans = [
     {
-      key: 'starter', name: t('pricing.starter'), priceUSD: 7, priceFCFA: 4500,
+      key: 'starter', name: t('pricing.starter'), priceUSD: 4.29, priceFCFA: 2500,
       features: [t('pricing.feat10'), t('pricing.featPdf'), t('pricing.featVat'), t('pricing.featEmail')],
     },
     {
-      key: 'pro', name: t('pricing.pro'), priceUSD: 12, priceFCFA: 7500,
+      key: 'pro', name: t('pricing.pro'), priceUSD: 11.15, priceFCFA: 6500,
       features: [t('pricing.feat30'), t('pricing.featAllTemplates'), t('pricing.featPdfCsv'), t('pricing.featPriority')],
       popular: true,
     },
     {
-      key: 'business', name: t('pricing.business'), priceUSD: 20, priceFCFA: 12000,
+      key: 'business', name: t('pricing.business'), priceUSD: 17.15, priceFCFA: 10000,
       features: [t('pricing.feat100'), t('pricing.featApi'), t('pricing.featDedicated'), t('pricing.featMulti')],
     },
   ];
