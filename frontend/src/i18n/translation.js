@@ -226,6 +226,7 @@ export const translations = {
       saving: 'Enregistrement...',
       quotaReached: 'Quota atteint',
       viewPlans: 'Voir les plans',
+      currency: 'Devise',
     },
 
     // ─── Aperçu facture ───
@@ -515,6 +516,7 @@ export const translations = {
       saving: 'Saving...',
       quotaReached: 'Quota reached',
       viewPlans: 'View plans',
+      currency: 'Currency',
     },
 
     // ─── Preview ───
