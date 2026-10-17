@@ -4186,3 +4186,61 @@ html {
   .pm-features-list { padding: 0 20px; }
   .pm-payment-info { margin: 0 20px 16px; padding: 14px; }
 }
+
+
+/* Bouton désactivé visuellement */
+.btn-print.btn-disabled,
+.btn-download.btn-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+.btn-print.btn-disabled:hover,
+.btn-download.btn-disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Hint animé (quand on clique sur un bouton désactivé) */
+.preview-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #FEF3C7;
+  color: #92400E;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-left: 3px solid #F59E0B;
+  animation: slideUp 0.3s ease-out;
+}
+
+.preview-hint svg { flex-shrink: 0; color: #F59E0B; }
+
+/* Bandeau permanent si incomplet */
+.preview-incomplete-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #F8F9FD;
+  color: #64748B;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  border: 1px dashed #DDE0EF;
+}
+
+.preview-incomplete-banner svg {
+  flex-shrink: 0;
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .preview-incomplete-banner {
+  background: #111827;
+  border-color: #1F2937;
+  color: #9CA3AF;
+}

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Printer, ArrowDown, Loader2 } from 'lucide-react';
+import { Printer, ArrowDown, Loader2, AlertCircle } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 import { formatMoney } from '../utils/currencies';
 
 export default function InvoicePreview({ invoice }) {
   const { t } = useLang();
   const [downloading, setDownloading] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const currency = invoice.currency || 'XOF';
 
   const subtotal = invoice.items.reduce(
@@ -16,7 +17,29 @@ export default function InvoicePreview({ invoice }) {
   const discountAmount = subtotal * ((invoice.discount || 0) / 100);
   const total = subtotal + taxAmount - discountAmount;
 
+  // 🎯 Validation : la facture doit avoir ces champs minimum
+  const hasCompany = invoice.company?.name?.trim();
+  const hasClient = invoice.client?.name?.trim();
+  const hasValidItem = invoice.items?.some(
+    (item) => item.description?.trim() && (item.unitPrice || 0) > 0
+  );
+  const isComplete = hasCompany && hasClient && hasValidItem;
+
+  // Message d'aide selon ce qui manque
+  const getMissingMessage = () => {
+    if (!hasCompany) return 'Complétez le nom de votre entreprise';
+    if (!hasClient) return 'Complétez le nom du client';
+    if (!hasValidItem) return 'Ajoutez au moins un article avec un prix';
+    return '';
+  };
+
   const handleDownload = async () => {
+    if (!isComplete) {
+      setShowHint(true);
+      setTimeout(() => setShowHint(false), 3000);
+      return;
+    }
+
     setDownloading(true);
     try {
       const html2pdf = (await import('html2pdf.js')).default;
@@ -35,10 +58,19 @@ export default function InvoicePreview({ invoice }) {
         .save();
     } catch (err) {
       console.error('PDF error:', err);
-      alert('Impossible de générer le PDF. Essayez l\'impression.');
+      alert('Impossible de générer le PDF.');
     } finally {
       setDownloading(false);
     }
+  };
+
+  const handlePrint = () => {
+    if (!isComplete) {
+      setShowHint(true);
+      setTimeout(() => setShowHint(false), 3000);
+      return;
+    }
+    window.print();
   };
 
   return (
@@ -46,13 +78,19 @@ export default function InvoicePreview({ invoice }) {
       <div className="preview-header">
         <h2>{t('preview.livePreview')}</h2>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-print" onClick={() => window.print()}>
+          <button
+            className={`btn btn-print ${!isComplete ? 'btn-disabled' : ''}`}
+            onClick={handlePrint}
+            disabled={!isComplete}
+            title={!isComplete ? getMissingMessage() : 'Imprimer'}
+          >
             <Printer size={15} /> {t('preview.print')}
           </button>
           <button
-            className="btn btn-download"
+            className={`btn btn-download ${!isComplete ? 'btn-disabled' : ''}`}
             onClick={handleDownload}
-            disabled={downloading}
+            disabled={downloading || !isComplete}
+            title={!isComplete ? getMissingMessage() : 'Télécharger'}
           >
             {downloading ? (
               <>
@@ -66,6 +104,22 @@ export default function InvoicePreview({ invoice }) {
           </button>
         </div>
       </div>
+
+      {/* Hint quand on clique sur un bouton désactivé */}
+      {showHint && !isComplete && (
+        <div className="preview-hint">
+          <AlertCircle size={16} />
+          <span>{getMissingMessage()}</span>
+        </div>
+      )}
+
+      {/* Bandeau d'aide si la facture est incomplète */}
+      {!isComplete && (
+        <div className="preview-incomplete-banner">
+          <AlertCircle size={14} />
+          <span>{getMissingMessage()}</span>
+        </div>
+      )}
 
       <div className="invoice-paper" id="invoice-paper">
         <div className="invoice-body">
