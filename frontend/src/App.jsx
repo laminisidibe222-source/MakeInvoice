@@ -239,6 +239,13 @@ if (!session) {
 function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpgrade }) {
   const canGenerate = profile && profile.invoices_generated < profile.invoices_limit;
   const [saving, setSaving] = useState(false);
+    // 🎯 Validation : La facture doit avoir ces champs minimum pour être enregistrée
+  const hasCompany = invoice.company?.name?.trim();
+  const hasClient = invoice.client?.name?.trim();
+  const hasValidItem = invoice.items?.some(
+    (item) => item.description?.trim() && (item.unitPrice || 0) > 0
+  );
+  const isInvoiceComplete = hasCompany && hasClient && hasValidItem;
   const{t} = useLang();
   // Live total of the current invoice
   const subtotal = invoice.items.reduce((s, i) => s + (i.quantity || 0) * (i.unitPrice || 0), 0);
@@ -347,11 +354,17 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     </div>
 
     <div className="mi-action-bar">
-      <button
-        className="btn btn-generate"
-        onClick={handleSave}
-        disabled={saving || !canGenerate}
-      >
+        {!isInvoiceComplete && (
+          <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '8px', fontStyle: 'italic' }}>
+            Remplissez le nom de l'entreprise, le client et ajoutez un article pour pouvoir enregistrer.
+          </div>
+        )}
+        <button
+          className="btn btn-generate"
+          onClick={handleSave}
+          disabled={saving || !canGenerate || !isInvoiceComplete}
+          title={!isInvoiceComplete ? "Complétez les informations (Entreprise, Client, Article) pour enregistrer" : ""}
+        >
         {saving ? (
           <>
             <span className="spinner-mini" />
