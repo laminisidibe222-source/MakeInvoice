@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Loader2, ShieldCheck, X, Check, Copy, Smartphone } from 'lucide-react';
 import { apiFetch } from '../supabase';
-import waveLogo from '../assets/logos/wave-log.png'; // 👈 On importe ton image
+import waveLogo from '../assets/logos/wave-logo.png'; // 👈 On importe ton image
 
 const PLANS = {
   starter:  { name: 'Starter',  priceFCFA: 2500,  limit: 10 },
