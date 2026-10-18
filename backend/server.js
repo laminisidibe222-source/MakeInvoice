@@ -22,7 +22,7 @@ app.use(cors({
 app.use('/api/paydunya/webhook', express.json({ type: '*/*' }));
 app.use(express.json());
 // ============================================
-// GET /api/pay/verify/:token — fallback si le webhook a échoué
+
 // ============================================
 // Supabase admin client (service role — full access, backend only)
 const supabase = createClient(
@@ -470,6 +470,105 @@ app.post(
   }
 );
 
+// ============================================
+// POST /api/payments/manual — Enregistre un paiement manuel
+// ============================================
+// ============================================
+// POST /api/payments/manual — Enregistre un paiement manuel
+// ============================================
+app.post('/api/payments/manual', requireAuth, async (req, res) => {
+  try {
+    const { plan, method, senderPhone, transactionId } = req.body;
+
+    if (!['pro', 'business'].includes(plan)) return res.status(400).json({ error: 'Plan invalide' });
+    if (method !== 'wave') return res.status(400).json({ error: 'Méthode invalide' }); // ⬅️ Modifié ici
+    if (!senderPhone) return res.status(400).json({ error: 'Numéro requis' });
+
+    const amount = plan === 'pro' ? 7500 : 12000;
+
+    const { data, error } = await supabase
+      .from('manual_payments')
+      .insert({
+        user_id: req.user.id,
+        plan,
+        amount,
+        method,
+        sender_phone: senderPhone,
+        transaction_id: transactionId || null,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    console.log(`💰 Manual payment request: ${req.user.email} → ${plan} (${method})`);
+    res.json({ success: true, id: data.id });
+  } catch (err) {
+    console.error('Manual payment error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// GET /api/payments/manual/pending — (admin) liste des paiements en attente
+// ============================================
+app.get('/api/payments/manual/pending', requireAuth, async (req, res) => {
+  try {
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+    if (!ADMIN_EMAIL || req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    const { data, error } = await supabase
+      .from('manual_payments')
+      .select('*, profiles!inner(email, full_name)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// POST /api/payments/manual/:id/approve — (admin) approuver un paiement
+// ============================================
+app.post('/api/payments/manual/:id/approve', requireAuth, async (req, res) => {
+  try {
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+    if (!ADMIN_EMAIL || req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+
+    const { id } = req.params;
+    const { data: payment, error: pErr } = await supabase
+      .from('manual_payments')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (pErr || !payment) return res.status(404).json({ error: 'Paiement introuvable' });
+
+    // Upgrade le plan
+    await supabase.rpc('upgrade_plan', {
+      p_user_id: payment.user_id,
+      p_plan: payment.plan,
+    });
+
+    // Marquer comme approuvé
+    await supabase
+      .from('manual_payments')
+      .update({ status: 'approved', processed_at: new Date().toISOString() })
+      .eq('id', id);
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 
 // ============================================
 // POST /api/invoices — create invoice (server-side quota check)

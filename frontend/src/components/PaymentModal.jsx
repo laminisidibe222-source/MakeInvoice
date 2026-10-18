@@ -1,128 +1,153 @@
 import { useState } from 'react';
-import { Loader2, Shield, X, ArrowRight, Check } from 'lucide-react';
+import { Loader2, Shield, X, Check, Smartphone, Copy } from 'lucide-react';
 import { apiFetch } from '../supabase';
-import { useLang } from '../i18n/LanguageContext';
+import WaveLogo from '/WaveLogo';
 
 const PLANS = {
-  starter:  { name: 'Starter',  priceFCFA: 4500,  limit: 10 },
-  pro:      { name: 'Pro',      priceFCFA: 7500,  limit: 30 },
-  business: { name: 'Business', priceFCFA: 12000, limit: 100 },
+  starter:  { name: 'Starter',  priceFCFA: 2500,  limit: 10 },
+  pro:      { name: 'Pro',      priceFCFA: 6500,  limit: 30 },
+  business: { name: 'Business', priceFCFA: 10000, limit: 100 },
 };
 
-const FEATURES = {
-  starter:  ['10 factures / mois', 'Export PDF', 'TVA & remises', 'Support email'],
-  pro:      ['30 factures / mois', 'Tous les modèles', 'Export PDF & CSV', 'Support prioritaire'],
-  business: ['100 factures / mois', 'API & intégrations', 'Support dédié', 'Multi-utilisateurs'],
-};
+// 🎯 REMPLACE CE NUMÉRO PAR TON VRAI NUMÉRO WAVE
+const WAVE_NUMBER = '+221 77 724 81 84';
 
-export default function PaymentModal({ plan, onClose, onSuccess, showToast }) {
-  const { t } = useLang();
+export default function PaymentModal({ plan, onClose }) {
+  const [step, setStep] = useState('send'); // On passe directement à l'étape d'envoi puisqu'il n'y a que Wave
+  const [phone, setPhone] = useState('');
+  const [transactionId, setTransactionId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const planData = PLANS[plan];
 
-  const handlePay = async () => {
-    setLoading(true);
-    try {
-      const data = await apiFetch('/api/lemonsqueezy/checkout', {
-        method: 'POST',
-        body: JSON.stringify({ plan }),
-      });
+  const copyNumber = () => {
+    navigator.clipboard.writeText(WAVE_NUMBER.replace(/\s/g, ''));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
-      } else {
-        throw new Error('Pas d\'URL de checkout');
-      }
+  const handleSubmit = async () => {
+    if (!phone) return setError('Entrez votre numéro Wave');
+    setLoading(true);
+    setError('');
+    try {
+      await apiFetch('/api/payments/manual', {
+        method: 'POST',
+        body: JSON.stringify({
+          plan,
+          method: 'wave', // Fixé sur wave
+          senderPhone: phone,
+          transactionId: transactionId || null,
+        }),
+      });
+      setSuccess(true);
     } catch (err) {
-      showToast(err.message || 'Erreur de paiement', 'error');
+      setError(err.message);
+    } finally {
       setLoading(false);
     }
   };
 
+  if (success) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal payment-modal slide-up" style={{ padding: '40px' }}>
+          <div className="pm-success" style={{ textAlign: 'center' }}>
+            <div className="checkmark" style={{ margin: '0 auto 20px' }}><Check size={36} strokeWidth={3} /></div>
+            <h3>Demande envoyée !</h3>
+            <p style={{ color: '#64748B', margin: '10px 0 24px' }}>
+              Votre compte sera activé sous 24h après vérification du paiement.
+            </p>
+            <button className="btn btn-generate" onClick={onClose} style={{ width: '100%' }}>
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="modal-overlay" onClick={() => !loading && onClose()}>
       <div className="modal payment-modal slide-up" onClick={(e) => e.stopPropagation()}>
-        <button
-          className="modal-close"
-          onClick={onClose}
-          disabled={loading}
-          aria-label="Close"
-        >
+        <button className="modal-close" onClick={onClose} disabled={loading}>
           <X size={18} />
         </button>
 
         <div className="pm-header">
-          <div className="pm-plan-badge">
-            {t('payment.plan')} {planData.name}
-          </div>
-          <h3 className="pm-title">Finaliser le paiement</h3>
+          <div className="pm-plan-badge">Plan {planData.name}</div>
+          <h3 className="pm-title">Paiement par Wave</h3>
           <p className="pm-subtitle">
-            Abonnement mensuel · {planData.limit} factures
+            {planData.priceFCFA.toLocaleString('fr-SN')} FCFA · {planData.limit} factures/mois
           </p>
         </div>
 
         <div className="pm-scroll">
-          <div className="pm-summary">
-            <div className="pm-summary-row">
-              <span className="pm-summary-label">Total à payer</span>
-              <span className="pm-summary-price">
-                {planData.priceFCFA.toLocaleString('fr-SN')}
-                <small>FCFA</small>
-              </span>
+          <div style={{ background: '#F8F9FD', padding: '20px', borderRadius: '14px', textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <WaveLogo size={48} />
             </div>
-            <div className="pm-summary-note">
-              <Shield size={13} /> Paiement sécurisé par Lemon Squeezy
+            
+            <div style={{ fontSize: '13px', color: '#64748B', fontWeight: 600, marginBottom: '8px' }}>Envoyez exactement</div>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: '#6366F1', marginBottom: '12px' }}>
+              {planData.priceFCFA.toLocaleString('fr-SN')} <small style={{ fontSize: '14px' }}>FCFA</small>
+            </div>
+            
+            <div style={{ fontSize: '13px', color: '#64748B', marginBottom: '8px' }}>au numéro Wave :</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', background: 'white', padding: '10px', borderRadius: '10px', border: '1px solid #EAECF5' }}>
+              <Smartphone size={18} color="#1DC8FF" />
+              <span style={{ fontSize: '16px', fontWeight: 700 }}>{WAVE_NUMBER}</span>
+              <button onClick={copyNumber} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
+                {copied ? <Check size={16} color="#10B981" /> : <Copy size={16} />}
+              </button>
             </div>
           </div>
 
-          <div className="pm-section-label">Inclus dans votre plan</div>
-          <ul className="pm-features-list">
-            {FEATURES[plan].map((f, i) => (
-              <li key={i}>
-                <span className="pm-feature-check">
-                  <Check size={12} strokeWidth={3.5} />
-                </span>
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
+          <label className="pm-phone-block" style={{ padding: 0 }}>
+            <span className="pm-phone-label">Votre numéro Wave</span>
+            <input
+              type="tel"
+              placeholder="77 123 45 67"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #EAECF5', marginBottom: '10px' }}
+            />
+          </label>
+          
+          <label className="pm-phone-block" style={{ padding: 0 }}>
+            <span className="pm-phone-label">ID de transaction (optionnel)</span>
+            <input
+              type="text"
+              placeholder="Ex: TXN123456789"
+              value={transactionId}
+              onChange={(e) => setTransactionId(e.target.value)}
+              style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #EAECF5' }}
+            />
+          </label>
 
-          <div className="pm-payment-info">
-            <p className="pm-info-text">
-              Vous allez être redirigé vers la page de paiement sécurisée.
-            </p>
-            <p className="pm-info-methods">
-              💳 Carte bancaire · 🌊 Wave · 🟠 Orange Money · 🔵 Mixx by Yas
-            </p>
+          {error && <div className="pm-error" style={{ color: '#EF4444', fontSize: '13px', marginTop: '10px' }}>{error}</div>}
+          
+          <div style={{ display: 'flex', gap: '8px', padding: '12px', background: '#F8F9FD', borderRadius: '10px', fontSize: '12px', color: '#64748B', marginTop: '16px' }}>
+            <Shield size={16} style={{ flexShrink: 0 }} />
+            <span>Votre compte sera activé manuellement dès que nous aurons vérifié la réception des fonds.</span>
           </div>
         </div>
 
         <button
           className="btn pm-pay-btn"
-          onClick={handlePay}
+          onClick={handleSubmit}
           disabled={loading}
-          style={{ '--brand-color': '#6366F1' }}
+          style={{ '--brand-color': '#1DC8FF', marginTop: '20px' }}
         >
           {loading ? (
-            <>
-              <Loader2 size={18} className="spin" />
-              Redirection...
-            </>
+            <><Loader2 size={18} className="spin" /> Envoi...</>
           ) : (
-            <>
-              Payer {planData.priceFCFA.toLocaleString('fr-SN')} FCFA
-              <ArrowRight size={16} />
-            </>
+            <><Check size={16} /> J'ai effectué le paiement</>
           )}
         </button>
-
-        <button className="pm-cancel" onClick={onClose} disabled={loading}>
-          Annuler
-        </button>
-
-        <p className="pm-legal">
-          En continuant, vous acceptez nos conditions générales de vente.
-        </p>
       </div>
     </div>
   );
