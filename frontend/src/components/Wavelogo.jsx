@@ -1,4 +1,4 @@
-export default function WaveLogo({ size = 28 }) {
+export default function Wavelogo({ size = 28 }) {
   return (
     <svg
       width={size}
