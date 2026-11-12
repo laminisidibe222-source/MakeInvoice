@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import {
-  Mail, Lock, User as UserIcon, Eye, EyeOff, RefreshCw, Asterisk,
+  Mail, Lock, User as UserIcon, Eye, EyeOff, Asterisk,
 } from 'lucide-react';
-import { supabase } from '../supabase';
 import Logo from './Logo';
 import LanguageSwitcher from './LanguageSwitcher';
-import GoogleLogo from './GoogleLogo';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useLang } from '../i18n/LanguageContext';
 
-export default function Auth({ onAuth }) {
+export default function Auth() {
   const { t } = useLang();
+  const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,43 +24,15 @@ export default function Auth({ onAuth }) {
     setError('');
 
     try {
-      if (mode === 'login') {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        onAuth(data.session);
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { full_name: fullName } },
-        });
-        if (error) throw error;
-        if (data.session) {
-          onAuth(data.session);
-        } else {
-          setError(t('auth.errorConfirmEmail'));
-        }
-      }
+      const { error: err } =
+        mode === 'login'
+          ? await signIn(email.trim(), password)
+          : await signUp(email.trim(), password, fullName.trim());
+      if (err) throw new Error(err);
+      // Session is applied inside useAuth → App re-renders automatically.
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-    } catch (err) {
-      setError(err.message);
       setLoading(false);
     }
   };
@@ -158,22 +130,6 @@ export default function Auth({ onAuth }) {
             </button>
           </form>
 
-          <div className="auth2-divider">
-            <span>{t('auth.orContinueWith')}</span>
-          </div>
-
-          {/* Google only */}
-          <button
-            type="button"
-            className="auth2-google"
-            onClick={handleGoogle}
-            disabled={loading}
-            aria-label="Continue with Google"
-          >
-            <GoogleLogo size={18} />
-            <span>Google</span>
-          </button>
-
           <p className="auth2-toggle">
             {mode === 'login' ? t('auth.noAccount') : t('auth.haveAccount')}{' '}
             <button
@@ -187,10 +143,6 @@ export default function Auth({ onAuth }) {
             </button>
           </p>
         </div>
-
-        <button className="auth2-refresh" type="button" aria-hidden="true" tabIndex={-1}>
-          <RefreshCw size={16} />
-        </button>
       </div>
     </div>
   );

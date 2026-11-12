@@ -8,8 +8,8 @@ export default function PricingSection({ currentPlan, onSelect }) {
     {
       key: 'starter',
       name: t('pricing.starter'),
-      priceUSD: 7,
-      priceFCFA: 2500,
+      priceUSD: 7.5,
+      priceFCFA: 4500,
       features: [
         t('pricing.feat10'),
         t('pricing.featPdf'),
@@ -20,8 +20,8 @@ export default function PricingSection({ currentPlan, onSelect }) {
     {
       key: 'pro',
       name: t('pricing.pro'),
-      priceUSD: 11.15,
-      priceFCFA: 6500,
+      priceUSD: 12.5,
+      priceFCFA: 7500,
       features: [
         t('pricing.feat30'),
         t('pricing.featAllTemplates'),
@@ -33,8 +33,8 @@ export default function PricingSection({ currentPlan, onSelect }) {
     {
       key: 'business',
       name: t('pricing.business'),
-      priceUSD: 17.15,
-      priceFCFA: 10000,
+      priceUSD: 20,
+      priceFCFA: 12000,
       features: [
         t('pricing.feat100'),
         t('pricing.featApi'),

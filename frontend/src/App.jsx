@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from './supabase';
+import { useAuth } from './context/AuthContext.jsx';
+import { apiFetch } from './lib/api.js';
 import { formatMoney } from './utils/currencies';
 import { useLang } from './i18n/LanguageContext';
 import Auth from './components/Auth';
@@ -8,15 +9,14 @@ import InvoiceForm from './components/InvoiceForm';
 import InvoicePreview from './components/InvoicePreview';
 import PricingSection from './components/PricingSection';
 import PaymentModal from './components/PaymentModal';
-import Logo from './components/Logo';
 import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import History from './components/History';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import {
-  Zap, LogOut, Save, XCircle, Printer, BarChart3, TrendingUp,
-  FileCheck2, Sparkles, CheckCircle2, Lock, ArrowUpRight, Moon, Sun, Menu,
+  BarChart3, TrendingUp,
+  FileCheck2, CheckCircle2, Lock, ArrowUpRight, Moon, Sun, Menu,
 } from 'lucide-react';
 import './App.css';
 
@@ -33,15 +33,14 @@ const DEFAULT_INVOICE = {
 };
 
 function App() {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
+  const { session, profile, loading, signOut, refreshProfile } = useAuth();
   const [invoice, setInvoice] = useState(DEFAULT_INVOICE);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const prefilledRef = useRef(false);
 
 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -54,80 +53,26 @@ function App() {
 const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
 
-  // Auth state
+  // Prefill the invoice company identity once, when the profile arrives.
   useEffect(() => {
-  let mounted = true;
+    if (!profile || prefilledRef.current) return;
+    prefilledRef.current = true;
+    setInvoice((prev) => ({
+      ...prev,
+      company: {
+        name: profile.company_name || '',
+        address: profile.company_address || '',
+        email: profile.email || '',
+        phone: profile.company_phone || '',
+      },
+    }));
+  }, [profile]);
 
-  // 1. Get the initial session from storage
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (!mounted) return;
-    setSession(session);
-    setLoading(false);
-  });
-
-  // 2. Listen for auth changes (login, logout, token refresh)
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    (event, session) => {
-      if (!mounted) return;
-      setSession(session);
-
-      // Only reset to landing if the user explicitly signed out
-      if (event === 'SIGNED_OUT') {
-        setShowAuth(false);
-      }
-    }
-  );
-
-  return () => {
-    mounted = false;
-    subscription.unsubscribe();
-  };
-}, []);
-
-  // Load profile when session exists
-  useEffect(() => {
-    if (session) {
-      loadProfile();
-    } else {
-      setProfile(null);
-    }
-  }, [session]);
-
-  const loadProfile = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-    if (!error) {
-      setProfile(data);
-      // Prefill company info
-      setInvoice(prev => ({
-        ...prev,
-        company: {
-          name: data.company_name || '',
-          address: data.company_address || '',
-          email: data.email || '',
-          phone: data.company_phone || '',
-        },
-      }));
-    }
-  };
-
-
-  const handleLogout = async () => {
-  try {
-    await supabase.auth.signOut();
-  } catch (err) {
-    console.error('Logout error:', err);
-  } finally {
-    // Clear all local state
-    setSession(null);
-    setProfile(null);
+  const handleLogout = () => {
+    signOut();
     setInvoice(DEFAULT_INVOICE);
-    setShowAuth(false);   // ← THIS LINE is the fix
-  }
-};
+    setShowAuth(false);   // ← land on the landing page after sign-out
+  };
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -144,7 +89,7 @@ if (!session && !showAuth) {
 
 // Show the auth screen (sign up / login)
 if (!session) {
-  return <Auth onAuth={setSession} />;
+  return <Auth />;
 }
 
  return (
@@ -206,14 +151,14 @@ if (!session) {
               invoice={invoice}
               setInvoice={setInvoice}
               profile={profile}
-              loadProfile={loadProfile}
+              refreshProfile={refreshProfile}
               showToast={showToast}
               onUpgrade={setSelectedPlan}
             />
           } />
           <Route path="/history" element={<History />} />
           <Route path="/payment/success" element={
-            <PaymentSuccess onDone={() => { loadProfile(); navigate('/'); }} />
+            <PaymentSuccess onDone={() => { refreshProfile(); navigate('/'); }} />
           } />
           <Route path="/payment/cancel" element={
             <PaymentCancel onDone={() => navigate('/')} />
@@ -227,8 +172,6 @@ if (!session) {
       <PaymentModal
         plan={selectedPlan}
         onClose={() => setSelectedPlan(null)}
-        onSuccess={() => { setSelectedPlan(null); loadProfile(); }}
-        showToast={showToast}
       />
     )}
 
@@ -236,7 +179,7 @@ if (!session) {
   </div>
 );
 }
-function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpgrade }) {
+function Workspace({ invoice, setInvoice, profile, refreshProfile, showToast, onUpgrade }) {
   const canGenerate = profile && profile.invoices_generated < profile.invoices_limit;
   const [saving, setSaving] = useState(false);
     // 🎯 Validation : La facture doit avoir ces champs minimum pour être enregistrée
@@ -264,14 +207,9 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     }
     setSaving(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
+      const { error } = await apiFetch('/api/invoices', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
+        body: {
           invoice_number: invoice.number,
           client_name: invoice.client.name,
           client_address: invoice.client.address,
@@ -287,16 +225,13 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
           discount_amount: discountAmount,
           total,
           notes: invoice.notes,
-        }),
+        },
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error);
-      }
+      if (error) throw new Error(error.message);
 
       showToast(t('toast.invoiceSaved'), 'success');
-      await loadProfile();
+      await refreshProfile();
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -304,8 +239,6 @@ function Workspace({ invoice, setInvoice, profile, loadProfile, showToast, onUpg
     }
   };
 
-  const formatFCFA = (n) =>
-    isNaN(n) ? '0 FCFA' : Number(n).toLocaleString('fr-SN') + ' FCFA';
 
   return (
   <main className="mi-workspace">
@@ -409,22 +342,25 @@ function PaymentSuccess({ onDone }) {
     const verify = async () => {
       const params = new URLSearchParams(window.location.search);
       const token = params.get('token');
-
-      if (!token) {
-        setStatus('no-token');
-        setTimeout(() => onDone(), 2000);
-        return;
-      }
+      const path = token
+        ? `/api/pay/verify?token=${encodeURIComponent(token)}`
+        : '/api/pay/verify';
 
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/pay/verify/${token}`
-        );
-        const data = await res.json();
+        const { data, error } = await apiFetch(path, { method: 'GET' });
         console.log('Verify response:', data);
 
-        if (data.status === 'completed') {
+        if (error) {
+          setStatus('error');
+          return;
+        }
+        if (data?.status === 'completed') {
           setStatus('success');
+          setTimeout(() => onDone(), 2500);
+        } else if (data?.status === 'no_pending_payment') {
+          // Nothing to verify (e.g. the user lands here without a checkout):
+          // still give Saspay a moment via the webhook, then bounce home.
+          setStatus('pending');
           setTimeout(() => onDone(), 2500);
         } else {
           setStatus('pending');
@@ -436,6 +372,7 @@ function PaymentSuccess({ onDone }) {
     };
 
     verify();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -461,12 +398,6 @@ function PaymentSuccess({ onDone }) {
           <>
             <h3>Paiement en attente</h3>
             <p>Votre paiement est en cours de validation.</p>
-          </>
-        )}
-        {status === 'no-token' && (
-          <>
-            <h3>{t('payment.successTitle')}</h3>
-            <p>{t('payment.successDesc')}</p>
           </>
         )}
         {status === 'error' && (

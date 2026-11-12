@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Plus, ArrowRight, TrendingUp, Calendar } from 'lucide-react';
-import { supabase } from '../supabase';
+import { from } from '../lib/db.js';
 import { useLang } from '../i18n/LanguageContext';
-import { formatMoney } from '../utils/currencies';
+
 export default function Dashboard({ profile }) {
   const { t } = useLang();
   const [invoices, setInvoices] = useState([]);
@@ -11,12 +11,8 @@ export default function Dashboard({ profile }) {
 
   useEffect(() => {
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data } = await supabase
-        .from('invoices')
+      const { data } = await from('invoices')
         .select('id, invoice_number, client_name, total, issue_date, created_at')
-        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .limit(5);
       setInvoices(data || []);

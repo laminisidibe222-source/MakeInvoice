@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FileText, Search, Calendar, ArrowDown, Loader2 } from 'lucide-react';
-import { supabase } from '../supabase';
+import { from } from '../lib/db.js';
 import { useLang } from '../i18n/LanguageContext';
 import { formatMoney } from '../utils/currencies';
 import { downloadInvoicePdf } from '../utils/invoicePdf';
@@ -14,12 +14,8 @@ export default function History() {
 
   useEffect(() => {
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data } = await supabase
-        .from('invoices')
+      const { data } = await from('invoices')
         .select('*')
-        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
       setInvoices(data || []);
       setLoading(false);
