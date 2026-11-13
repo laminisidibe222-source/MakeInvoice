@@ -2,8 +2,8 @@
 
 MakeInvoice is a professional invoice generator with a subscription business
 model: users create branded PDF invoices (html2pdf), the app enforces a
-per-plan monthly quota, and subscriptions are billed with **Saspay** (hosted
-checkout, PayDunya-style REST) with automatic plan upgrade via IPN webhook.
+per-plan monthly quota, and subscriptions are billed with **SasPay** (hosted
+checkout, signature-verified webhook) with automatic plan upgrade.
 
 **Architecture (all client data flows through Vercel serverless functions):**
 
@@ -23,7 +23,7 @@ browser ── /api/* (same origin) ──► Vercel Node functions ──► Ne
 - 🧾 Invoice creation with live preview, VAT (`/18% default`), discounts, **PDF export**.
 - 📊 Dashboard + invoice history (`/history`).
 - 💳 3 plans — **Starter 4 500 FCFA** (10 factures), **Pro 7 500 FCFA** (30 factures), **Business 12 000 FCFA** (100 factures) — quota enforced server-side (`/api/invoices`).
-- ⚡ Payments via **Saspay**: hosted checkout → Saspay IPN webhook (parallel confirm as fallback) → plan auto-upgrade, idempotent.
+- ⚡ Payments via **SasPay**: hosted checkout → SasPay webhook (signature-verified, idempotent) → plan auto-upgrade, with `/payment/success` server confirm as fallback.
 - ☁️ One **Vercel** deployment: `frontend/` hosts the static SPA **and** the `/api` serverless functions.
 
 ---
@@ -43,7 +43,8 @@ Fill in at least:
 ```
 DATABASE_URL=postgresql://...
 JWT_SECRET=<openssl rand -hex 32>
-SASPAY_* = (from your Saspay merchant dashboard)
+SASPAY_API_KEY=sk_test_…            # or sk_live_…
+SASPAY_WEBHOOK_SECRET=…             # from SasPay dashboard → Développeur → Webhooks
 ```
 
 ### 3. Run
@@ -66,26 +67,26 @@ you'll start on the Starter plan (10 invoices).
 - `JWT_SECRET` signs HS256 session tokens (`{ sub, email }`, 7-day TTL). The browser stores them in `localStorage` and sends `Authorization: Bearer …` to every `/api/*` call.
 - `public.profiles` — 1:1 with users; holds `plan`, `invoices_generated`, `invoices_limit`, plus company identity for invoice pre-fill.
 
-## 💳 How payments flow (Saspay)
+## 💳 How payments flow (SasPay)
+
+Spec: `https://api.saspay.me/api/v1` (see the integration guide `SKILL.md`, provided by the seller, for the full spec). Key rules: amount as decimal **string** (`"4500.00"`), live keys never in the browser, and delivery only on verified `SUCCESS`.
 
 1. User picks a plan in PricingSection → **PaymentModal** → `POST /api/pay { plan }`.
-2. The function logs a `payments` row (`status: pending`), asks Saspay for a
-   checkout invoice (`POST {SASPAY_BASE_URL}/checkout-invoice/create`), and
-   returns `checkout_url` to the browser.
-3. Browser redirects to the Saspay hosted page (Wave, Orange Money, card…).
-4. Saspay calls the IPN webhook → `POST /api/pay/webhook` with `{ data: { token } }`.
-   The webhook does **not** trust the payload: it re-confirms the checkout with
-   `GET …/checkout-invoice/confirm/:token` (source of truth), then upgrades the
-   plan **idempotently** (`payments.status → completed` + profile plan/limit
-   update, quota reset).
+2. The function logs a `payments` row (`status: pending`), creates a hosted
+   checkout session (`POST /checkout-sessions/`), and returns `checkout_url`.
+3. Browser redirects to the SasPay hosted page (Wave, Orange Money, card…).
+4. SasPay calls the webhook → `POST /api/pay/webhook` with the
+   `X-Webhook-Signature` + `X-Webhook-Timestamp` headers. The function
+   **verifies the HMAC-SHA256 signature over the raw body** (timestamp window
+   ±300 s) before touching anything, then flips the payment to `completed`
+   and upgrades the plan **idempotently** (quota reset).
 5. Back in the app, `/payment/success` calls `GET /api/pay/verify` (no token
-   needed — it checks the user's latest pending payment and confirms it) as a
-   fallback if the IPN is delayed. Idempotent as well.
+   needed — it checks the user's latest pending payment and confirms it via
+   `GET /checkout-sessions/{id}/status/`) as a fallback if the IPN is delayed.
+   Also idempotent.
 
-> **If your Saspay dashboard issues different endpoint paths / headers**, only
-> `api/_lib/saspay.js` needs to change — the merchant-call shapes, the env
-> names, and the idempotency semantics are all centralized there. Set
-> `SASPAY_BASE_URL` to override the mode-derived base URL, and `SASPAY_MODE=test|production`.
+> **Only the webhook signs deliveries.** The success page and `/api/pay/verify`
+> re-confirm with SasPay before upgrading anything — never trust the browser.
 
 ---
 
@@ -124,12 +125,16 @@ real-looking PayDunya keys; rotate them if they were ever shared.**
 4. Add environment variables (Production + Preview):
    - `DATABASE_URL` (Neon pooled string, `sslmode=require`)
    - `JWT_SECRET`
-   - `SASPAY_MASTER_KEY`, `SASPAY_PRIVATE_KEY`, `SASPAY_TOKEN`, `SASPAY_MODE`
-   - `VITE_APP_URL=https://<your-domain>`
+   - `SASPAY_API_KEY` (`sk_test_…` or `sk_live_…`, from the SasPay dashboard → Développeur)
+   - `SASPAY_WEBHOOK_SECRET` (from the webhook you create in the dashboard)
+   - `APP_URL=https://<your-domain>` (and `VITE_APP_URL=https://<your-domain>` for the SPA)
 5. The frontend and `/api/*` deploy as one project; `vercel.json` rewrites
    non-API paths to the SPA.
-6. In your Saspay dashboard, set the webhook/IPN callback to
-   `https://<your-domain>/api/pay/webhook`.
+6. In your SasPay dashboard → Développeur → Webhooks, create a webhook pointing
+   to `https://<your-domain>/api/pay/webhook`, subscribe to
+   `transaction.success` (+ `transaction.failed` / `transaction.cancelled`),
+   then copy the **signing_secret** into the `SASPAY_WEBHOOK_SECRET` env var.
+   The signing secret is shown **only once** at creation.
 
 ---
 
@@ -149,8 +154,11 @@ real-looking PayDunya keys; rotate them if they were ever shared.**
 
 - **`DATABASE_URL is not configured`** → set it in `frontend/.env` (dev) or Vercel env vars (prod).
 - **`JWT_SECRET is not configured`** → same.
-- **Payment returns error 502** → check `SASPAY_*` keys/mode; test mode only accepts sandbox checkouts.
-- **Checkout completed but plan didn't change** → the IPN didn't reach the
-  webhook (wrong URL/secret) or the payment wasn't actually completed —
-  `/payment/success` confirms via the server as fallback and logs the outcome.
+- **Payment returns error 502/503** → `SASPAY_API_KEY` missing or invalid, or
+  `SASPAY_WEBHOOK_SECRET` wrong (webhook signature will be rejected). Check the
+  exact `error.message` in the browser / Vercel logs.
+- **Checkout completed but plan didn't change** → the webhook didn't verify the
+  signature (`SASPAY_WEBHOOK_SECRET` mismatch) or the IPN didn't reach the
+  deployment — `/payment/success` confirms via `/api/pay/verify` as fallback
+  and logs the outcome. Check Vercel logs for `[pay/webhook]` / `[pay/verify]`.
 - **Lint** → `npm run lint` in `frontend/` (config is scoped to the app; the repo's old root-level `eslint.config.js` is superseded).

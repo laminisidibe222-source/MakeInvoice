@@ -1,10 +1,9 @@
-// /api/pay — create a Saspay checkout for a plan.
-// The browser sends { plan }; we return { checkout_url, token }.
-// The webhook (/api/pay/webhook) and the confirm endpoint (/api/pay/verify)
-// complete the upgrade idempotently.
+// /api/pay — create a SasPay hosted-checkout session for a plan.
+// The browser gets { checkout_url } and redirects there; the webhook
+// (/api/pay/webhook) upgrades the plan automatically (verified server-side).
 import { query } from "./_lib/db.js";
 import { requireAuth, appBaseUrl } from "./_lib/auth.js";
-import { PLANS, saspayCreateCheckout } from "./_lib/saspay.js";
+import { PLANS, createCheckoutSession, toDecimalString } from "./_lib/saspay.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -16,6 +15,9 @@ export default async function handler(req, res) {
   }
   if (!process.env.JWT_SECRET) {
     return res.status(500).json({ error: "JWT_SECRET is not configured on the server." });
+  }
+  if (!process.env.SASPAY_API_KEY) {
+    return res.status(503).json({ error: "SasPay is not configured on this deployment yet." });
   }
   const auth = await requireAuth(req);
   if (!auth.ok) return res.status(auth.status).json({ error: auth.error });
@@ -37,44 +39,26 @@ export default async function handler(req, res) {
       [auth.user.id, plan, planConfig.amount]
     );
 
-    const baseUrl = process.env.BACKEND_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : base);
+    const { ok, payload } = await createCheckoutSession({
+      amount: toDecimalString(planConfig.amount),
+      currency: "XOF",
+      country: "SN",
+      description: planConfig.label,
+      customerEmail: auth.user.email,
+      customerName: auth.profile?.full_name ?? auth.user.email,
+      returnUrl: `${base}/payment/success`,
+      metadata: { user_id: auth.user.id, plan },
+    });
 
-    const payload = {
-      invoice: {
-        total_amount: planConfig.amount,
-        description: planConfig.label,
-      },
-      store: {
-        name: "MakeInvoice",
-        tagline: "Générateur de factures professionnel",
-        website_url: base,
-      },
-      custom_data: {
-        user_id: auth.user.id,
-        user_email: auth.user.email,
-        plan,
-      },
-      actions: {
-        // Saspay calls this URL (IPN) when the payment state changes.
-        callback_url: `${baseUrl}/api/pay/webhook`,
-        // The success page polls /api/pay/verify (no token needed) to
-        // complete/confirm the pending payment for this user.
-        return_url: `${base}/payment/success`,
-        cancel_url: `${base}/payment/cancel`,
-      },
-    };
+    const sessionId = payload?.data?.id ?? null;
+    const checkoutUrl = payload?.data?.checkout_url ?? null;
 
-    const data = await saspayCreateCheckout(payload);
-
-    if (data?.response_code !== "00") {
-      console.error("[pay] Saspay create response:", JSON.stringify(data));
-      await query(
-        `update public.payments set status = 'failed', updated_at = now() where id = $1`,
-        [pending.id]
-      );
+    if (!ok || !sessionId || !checkoutUrl) {
+      console.error("[pay] SasPay create-session failed:", JSON.stringify(payload));
+      await query(`update public.payments set status = 'failed', updated_at = now() where id = $1`, [pending.id]);
       return res.status(502).json({
         error: "Payment could not be created. Please try again.",
-        details: data,
+        details: payload,
       });
     }
 
@@ -85,16 +69,13 @@ export default async function handler(req, res) {
               updated_at = now()
         where id = $3`,
       [
-        data.token,
-        JSON.stringify({ ...(typeof data === "object" ? data : {}), checkout_url: data.response_text }),
+        sessionId,
+        JSON.stringify({ checkout_session_id: sessionId, ...(payload?.data ?? {}) }),
         pending.id,
       ]
     );
 
-    return res.status(200).json({
-      checkout_url: data.response_text,
-      token: data.token,
-    });
+    return res.status(200).json({ checkout_url: checkoutUrl, session_id: sessionId });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Server error.";
     console.error("[pay] error:", err);
