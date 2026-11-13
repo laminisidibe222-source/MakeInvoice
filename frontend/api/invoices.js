@@ -22,6 +22,9 @@ const INVOICE_COLUMNS = [
   "status",
 ];
 
+/** jsonb columns that need an explicit cast for the Neon HTTP driver. */
+const JSONB_COLUMNS = new Set(["items"]);
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -54,14 +57,21 @@ export default async function handler(req, res) {
     // Whitelist invoice columns from the client payload
     const values = { user_id: auth.user.id };
     for (const col of INVOICE_COLUMNS) {
-      if (body[col] !== undefined) values[col] = body[col];
+      if (body[col] !== undefined) {
+        // jsonb columns: the Neon HTTP driver passes JS arrays/objects in a
+        // shape Postgres rejects ("invalid input syntax for type json"), so
+        // we stringify the value and cast the placeholder to ::jsonb.
+        values[col] = JSONB_COLUMNS.has(col) ? JSON.stringify(body[col]) : body[col];
+      }
     }
     if (!values.invoice_number || String(values.invoice_number).trim() === "") {
       return res.status(400).json({ error: "invoice_number is required." });
     }
 
     const cols = Object.keys(values);
-    const placeholders = cols.map((_, i) => `$${i + 1}`).join(", ");
+    const placeholders = cols
+      .map((_, i) => (JSONB_COLUMNS.has(cols[i]) ? `$${i + 1}::jsonb` : `$${i + 1}`))
+      .join(", ");
     const [invoice] = await query(
       `insert into public.invoices (${cols.map((c) => `"${c}"`).join(", ")})
        values (${placeholders})
