@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Building2, MapPin, Mail, Phone, User, Hash, Calendar,
   Package, Percent, StickyNote, Plus, X, Coins,
@@ -14,6 +15,56 @@ function Field({ label, icon: Icon, children, full }) {
       </span>
       {children}
     </label>
+  );
+}
+
+/**
+ * Free-typing numeric input.
+ *
+ * The old `type="number"` fields fought the user: the browser drew up/down
+ * spinners, clearing the box snapped it back to 0, and "12.5" collapsed to 12
+ * on the way in. This keeps the raw text in local state so anything can be
+ * typed (empty, "12.", "0,5"), and only hands the parsed number upwards.
+ */
+function NumberInput({ value, onChange, min = 0, max, placeholder = '0', ariaLabel }) {
+  // `draft` holds exactly what the user typed; null means "show the prop value".
+  // No syncing effect, so nothing fights the caret while typing.
+  const [draft, setDraft] = useState(null);
+  const text = draft ?? (value ? String(value) : '');
+
+  const parse = (raw) => {
+    let parsed = Number(raw.replace(',', '.'));
+    if (!Number.isFinite(parsed)) return 0;
+    if (min != null && parsed < min) parsed = min;
+    if (max != null && parsed > max) parsed = max;
+    return parsed;
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      autoComplete="off"
+      className="number-input"
+      aria-label={ariaLabel}
+      placeholder={placeholder}
+      value={text}
+      onFocus={(e) => e.target.select()}
+      onBlur={() => {
+        // empty means zero, and zero is shown as an empty box again
+        const next = parse(draft ?? text);
+        setDraft(null);
+        onChange(next);
+      }}
+      onChange={(e) => {
+        const cleaned = e.target.value.replace(/[^\d.,-]/g, '');
+        setDraft(cleaned);
+        onChange(parse(cleaned));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+    />
   );
 }
 
@@ -86,6 +137,7 @@ export default function InvoiceForm({ invoice, setInvoice }) {
             </Field>
             <Field label={t('form.phone')} icon={Phone}>
               <input
+                type="tel"
                 placeholder={t('form.phonePlaceholder')}
                 value={invoice.company.phone}
                 onChange={(e) => updateCompany('phone', e.target.value)}
@@ -130,6 +182,7 @@ export default function InvoiceForm({ invoice, setInvoice }) {
             </Field>
             <Field label={t('form.phone')} icon={Phone}>
               <input
+                type="tel"
                 placeholder={t('form.phonePlaceholder')}
                 value={invoice.client.phone}
                 onChange={(e) => updateClient('phone', e.target.value)}
@@ -203,9 +256,11 @@ export default function InvoiceForm({ invoice, setInvoice }) {
                 <div className="item-card-head">
                   <span className="item-card-num">{i + 1}</span>
                   <button
+                    type="button"
                     className="item-card-remove"
                     onClick={() => removeItem(i)}
                     disabled={invoice.items.length <= 1}
+                    aria-label={t('form.removeItem') || 'Remove item'}
                   >
                     <X size={16} />
                   </button>
@@ -219,19 +274,21 @@ export default function InvoiceForm({ invoice, setInvoice }) {
                     />
                   </Field>
                   <Field label={t('form.quantity')}>
-                    <input
-                      type="number"
-                      min="1"
+                    <NumberInput
+                      min={1}
                       value={item.quantity}
-                      onChange={(e) => updateItem(i, 'quantity', e.target.value)}
+                      onChange={(v) => updateItem(i, 'quantity', v)}
+                      placeholder="1"
+                      ariaLabel={t('form.quantity')}
                     />
                   </Field>
-                  <Field label={t('form.unitPrice')}>
-                    <input
-                      type="number"
-                      min="0"
+                  <Field label={`${t('form.unitPrice')} (${currency})`}>
+                    <NumberInput
+                      min={0}
                       value={item.unitPrice}
-                      onChange={(e) => updateItem(i, 'unitPrice', e.target.value)}
+                      onChange={(v) => updateItem(i, 'unitPrice', v)}
+                      placeholder="0"
+                      ariaLabel={t('form.unitPrice')}
                     />
                   </Field>
                 </div>
@@ -247,7 +304,7 @@ export default function InvoiceForm({ invoice, setInvoice }) {
               </div>
             ))}
           </div>
-          <button className="btn btn-add-2" onClick={addItem}>
+          <button type="button" className="btn btn-add-2" onClick={addItem}>
             <Plus size={16} strokeWidth={2.6} />
             {t('form.addItem')}
           </button>
@@ -266,21 +323,21 @@ export default function InvoiceForm({ invoice, setInvoice }) {
         <div className="form-card-body">
           <div className="form-grid-2">
             <Field label={t('form.vatRate')} icon={Percent}>
-              <input
-                type="number"
-                min="0"
-                max="100"
+              <NumberInput
+                min={0}
+                max={100}
                 value={invoice.taxRate}
-                onChange={(e) => update('taxRate', Number(e.target.value) || 0)}
+                onChange={(v) => update('taxRate', v)}
+                ariaLabel={t('form.vatRate')}
               />
             </Field>
             <Field label={t('form.discountRate')} icon={Percent}>
-              <input
-                type="number"
-                min="0"
-                max="100"
+              <NumberInput
+                min={0}
+                max={100}
                 value={invoice.discount}
-                onChange={(e) => update('discount', Number(e.target.value) || 0)}
+                onChange={(v) => update('discount', v)}
+                ariaLabel={t('form.discountRate')}
               />
             </Field>
           </div>

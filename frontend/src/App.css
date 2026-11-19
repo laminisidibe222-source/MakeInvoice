@@ -618,7 +618,7 @@ textarea { resize: vertical; min-height: 90px; }
   font-weight: 500;
   color: #0F172A;
   background: #F8F9FD;
-  border: 1.5px solid transparent;
+  border: 1.5px solid #E9ECF6;
   border-radius: 12px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
@@ -629,7 +629,7 @@ textarea { resize: vertical; min-height: 90px; }
   font-weight: 400;
 }
 .invoice-form input:hover,
-.invoice-form textarea:hover { background: #F1F3FA; }
+.invoice-form textarea:hover { background: #F1F3FA; border-color: #D5DAEE; }
 .invoice-form input:focus,
 .invoice-form textarea:focus {
   background: #FFFFFF;
@@ -641,6 +641,46 @@ textarea { resize: vertical; min-height: 90px; }
   resize: vertical;
   min-height: 90px;
   line-height: 1.6;
+}
+
+/* No native up/down steppers on numeric fields — they read as tiny buttons
+   that raise and lower the value, and they sit on top of the caret. */
+.invoice-form input[type='number']::-webkit-outer-spin-button,
+.invoice-form input[type='number']::-webkit-inner-spin-button,
+.invoice-form input::-webkit-outer-spin-button,
+.invoice-form input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+.invoice-form input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Numeric fields are text inputs now: keep them readable and roomy */
+.invoice-form .number-input {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Inside an item card the field colour matched the card, so the inputs were
+   invisible. Give them a real surface and edge. */
+.invoice-form .item-card input,
+.invoice-form .item-card textarea {
+  background: #FFFFFF;
+  border-color: #E3E7F4;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.invoice-form .item-card input:hover,
+.invoice-form .item-card textarea:hover {
+  background: #FFFFFF;
+  border-color: #CBD2E8;
+}
+.invoice-form .item-card input:focus,
+.invoice-form .item-card textarea:focus {
+  background: #FFFFFF;
+  border-color: #6C5CE7;
 }
 
 /* ============================================================
@@ -699,9 +739,11 @@ textarea { resize: vertical; min-height: 90px; }
 .item-card-remove:hover:not(:disabled) { background: #FEE2E2; color: #EF4444; }
 .item-card-remove:disabled { opacity: 0.3; cursor: not-allowed; }
 
+/* Description on its own row, then a narrow quantity and a wide price:
+   the old 2fr/0.8fr/1fr split gave quantity 208px and price 83px. */
 .item-card-fields {
   display: grid;
-  grid-template-columns: 2fr 0.8fr 1fr;
+  grid-template-columns: 104px minmax(0, 1fr);
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -4483,4 +4525,11 @@ html {
   justify-content: center;
   margin: 0 auto 20px;
   box-shadow: 0 12px 32px rgba(16, 185, 129, 0.2);
+}
+
+/* Very narrow phones: stack quantity and price so neither is crushed */
+@media (max-width: 520px) {
+  .item-card-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
