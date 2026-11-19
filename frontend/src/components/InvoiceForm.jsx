@@ -1,19 +1,28 @@
 import { useState } from 'react';
 import {
   Building2, MapPin, Mail, Phone, User, Hash, Calendar,
-  Package, Percent, StickyNote, Plus, X, Coins,
+  Package, Percent, StickyNote, Plus, X, Coins, AlertCircle,
 } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 import { formatMoney, CURRENCY_OPTIONS } from '../utils/currencies';
 
-function Field({ label, icon: Icon, children, full }) {
+function Field({ label, icon: Icon, children, full, error, hint }) {
   return (
-    <label className={`field ${full ? 'field-full' : ''}`}>
+    <label
+      className={`field ${full ? 'field-full' : ''} ${error ? 'has-error' : ''}`}
+      data-invalid={error ? 'true' : undefined}
+    >
       <span className="field-label">
         {Icon && <Icon size={12} strokeWidth={2.6} />}
         {label}
       </span>
       {children}
+      {error && hint && (
+        <span className="field-hint" role="alert">
+          <AlertCircle size={12} strokeWidth={2.6} />
+          {hint}
+        </span>
+      )}
     </label>
   );
 }
@@ -68,9 +77,17 @@ function NumberInput({ value, onChange, min = 0, max, placeholder = '0', ariaLab
   );
 }
 
-export default function InvoiceForm({ invoice, setInvoice }) {
+export default function InvoiceForm({ invoice, setInvoice, showErrors = false }) {
   const { t } = useLang();
   const currency = invoice.currency || 'XOF';
+
+  // Only shown after the user tries to save, so the form does not scold anyone
+  // for fields they have not reached yet. Each hint clears the moment it is fixed.
+  const missingCompanyName = showErrors && !invoice.company.name.trim();
+  const missingClientName = showErrors && !invoice.client.name.trim();
+  const noValidItem =
+    showErrors &&
+    !invoice.items.some((i) => i.description.trim() && (i.unitPrice || 0) > 0);
 
   const update = (field, value) => setInvoice((p) => ({ ...p, [field]: value }));
   const updateCompany = (f, v) =>
@@ -113,7 +130,12 @@ export default function InvoiceForm({ invoice, setInvoice }) {
         </div>
         <div className="form-card-body">
           <div className="form-grid-2">
-            <Field label={t('form.companyName')} icon={Building2}>
+            <Field
+              label={t('form.companyName')}
+              icon={Building2}
+              error={missingCompanyName}
+              hint={t('form.companyNameRequired')}
+            >
               <input
                 placeholder={t('form.companyNamePlaceholder')}
                 value={invoice.company.name}
@@ -158,7 +180,12 @@ export default function InvoiceForm({ invoice, setInvoice }) {
         </div>
         <div className="form-card-body">
           <div className="form-grid-2">
-            <Field label={t('form.clientName')} icon={User}>
+            <Field
+              label={t('form.clientName')}
+              icon={User}
+              error={missingClientName}
+              hint={t('form.clientNameRequired')}
+            >
               <input
                 placeholder={t('form.clientNamePlaceholder')}
                 value={invoice.client.name}
@@ -266,7 +293,13 @@ export default function InvoiceForm({ invoice, setInvoice }) {
                   </button>
                 </div>
                 <div className="item-card-fields">
-                  <Field label={t('form.description')} icon={Package} full>
+                  <Field
+                    label={t('form.description')}
+                    icon={Package}
+                    full
+                    error={noValidItem && !item.description.trim()}
+                    hint={t('form.itemDescriptionRequired')}
+                  >
                     <input
                       placeholder={t('form.descriptionPlaceholder')}
                       value={item.description}
@@ -282,7 +315,11 @@ export default function InvoiceForm({ invoice, setInvoice }) {
                       ariaLabel={t('form.quantity')}
                     />
                   </Field>
-                  <Field label={`${t('form.unitPrice')} (${currency})`}>
+                  <Field
+                    label={`${t('form.unitPrice')} (${currency})`}
+                    error={noValidItem && !((item.unitPrice || 0) > 0)}
+                    hint={t('form.itemPriceRequired')}
+                  >
                     <NumberInput
                       min={0}
                       value={item.unitPrice}

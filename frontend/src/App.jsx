@@ -182,6 +182,8 @@ if (!session) {
 function Workspace({ invoice, setInvoice, profile, refreshProfile, showToast, onUpgrade }) {
   const canGenerate = profile && profile.invoices_generated < profile.invoices_limit;
   const [saving, setSaving] = useState(false);
+  // inline field hints appear only after a save attempt, then clear as fields fill
+  const [showErrors, setShowErrors] = useState(false);
     // 🎯 Validation : La facture doit avoir ces champs minimum pour être enregistrée
   const hasCompany = invoice.company?.name?.trim();
   const hasClient = invoice.client?.name?.trim();
@@ -200,11 +202,26 @@ function Workspace({ invoice, setInvoice, profile, refreshProfile, showToast, on
     ? Math.min((profile.invoices_generated / profile.invoices_limit) * 100, 100)
     : 0;
 
+  const focusFirstInvalid = () => {
+    requestAnimationFrame(() => {
+      const el = document.querySelector('[data-invalid="true"] input, [data-invalid="true"] textarea');
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus({ preventScroll: true });
+    });
+  };
+
   const handleSave = async () => {
     if (!canGenerate) {
     showToast(t('toast.quotaError'), 'error');
     return;
     }
+    if (!isInvoiceComplete) {
+      setShowErrors(true);
+      focusFirstInvalid();
+      return;
+    }
+    setShowErrors(false);
     setSaving(true);
     try {
       const { error } = await apiFetch('/api/invoices', {
@@ -249,7 +266,7 @@ function Workspace({ invoice, setInvoice, profile, refreshProfile, showToast, on
 
     <div className="mi-grid">
       <div className="mi-col mi-col--form">
-        <InvoiceForm invoice={invoice} setInvoice={setInvoice} />
+        <InvoiceForm invoice={invoice} setInvoice={setInvoice} showErrors={showErrors} />
       </div>
 
       <div className="mi-col mi-col--preview">
@@ -287,16 +304,12 @@ function Workspace({ invoice, setInvoice, profile, refreshProfile, showToast, on
     </div>
 
     <div className="mi-action-bar">
-        {!isInvoiceComplete && (
-          <div style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '8px', fontStyle: 'italic' }}>
-            Remplissez le nom de l'entreprise, le client et ajoutez un article pour pouvoir enregistrer.
-          </div>
-        )}
         <button
           className="btn btn-generate"
           onClick={handleSave}
-          disabled={saving || !canGenerate || !isInvoiceComplete}
-          title={!isInvoiceComplete ? "Complétez les informations (Entreprise, Client, Article) pour enregistrer" : ""}
+          disabled={saving || !canGenerate}
+          aria-disabled={saving || !canGenerate}
+          title={!isInvoiceComplete ? t('form.completeToSave') : ''}
         >
         {saving ? (
           <>

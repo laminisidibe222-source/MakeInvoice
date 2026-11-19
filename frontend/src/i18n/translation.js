@@ -227,6 +227,12 @@ export const translations = {
       quotaReached: 'Quota atteint',
       viewPlans: 'Voir les plans',
       currency: 'Devise',
+      required: 'Requis',
+      companyNameRequired: "Indiquez le nom de votre entreprise.",
+      clientNameRequired: 'Indiquez le nom du client.',
+      itemDescriptionRequired: 'Décrivez la prestation facturée.',
+      itemPriceRequired: 'Indiquez un prix supérieur à 0.',
+      completeToSave: 'Complétez les champs en rouge pour enregistrer.',
     },
 
     // ─── Aperçu facture ───
@@ -517,6 +523,12 @@ export const translations = {
       quotaReached: 'Quota reached',
       viewPlans: 'View plans',
       currency: 'Currency',
+      required: 'Required',
+      companyNameRequired: 'Enter your company name.',
+      clientNameRequired: 'Enter the client name.',
+      itemDescriptionRequired: 'Describe what you are billing.',
+      itemPriceRequired: 'Enter a price above 0.',
+      completeToSave: 'Fill in the highlighted fields to save.',
     },
 
     // ─── Preview ───

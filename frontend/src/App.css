@@ -609,6 +609,39 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .field-label svg { flex-shrink: 0; opacity: 0.85; }
 
+/* ── Inline validation ─────────────────────────────────────── */
+.field.has-error .field-label { color: #DC2626; }
+
+/* `.invoice-form` prefix so these beat the item-card input rules below */
+.invoice-form .field.has-error input,
+.invoice-form .field.has-error textarea,
+.invoice-form .field.has-error select {
+  border-color: #EFA6A6;
+  background: #FFF7F7;
+}
+
+.invoice-form .field.has-error input:hover,
+.invoice-form .field.has-error textarea:hover { border-color: #E07B7B; background: #FFF3F3; }
+
+.invoice-form .field.has-error input:focus,
+.invoice-form .field.has-error textarea:focus,
+.invoice-form .field.has-error select:focus {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+}
+
+.field-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -1px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #DC2626;
+}
+.field-hint svg { flex-shrink: 0; }
+
 /* Form-scoped inputs (softer look) */
 .invoice-form input,
 .invoice-form textarea {
